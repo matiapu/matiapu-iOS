@@ -1,0 +1,53 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode — ユーザー固有・ビルド成果物
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcarchive
+
+# Swift Package Manager（ローカルキャッシュのみ）
+.build/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+
+# CocoaPods / Carthage（将来使う場合）
+Pods/
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Firebase — API キー等を含むためリポジトリに含めない
+GoogleService-Info.plist
+**/GoogleService-Info.plist
+
+# 証明書・プロビジョニング
+*.mobileprovision
+*.p12
+*.cer
+*.pem
+
+# 環境変数・シークレット
+.env
+.env.*
+*.secret
+secrets/
+Secrets.xcconfig
+
+# エディタ（ローカル設定）
+.idea/
+*.swp
+*~
