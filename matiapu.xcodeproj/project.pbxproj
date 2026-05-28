@@ -6,7 +6,17 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		6701AEB82FC7CFA700A863D2 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 6701AEB72FC7CFA700A863D2 /* GoogleMaps */; };
+		6716A7CB2FBEAE6D009EB2BC /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7CA2FBEAE6D009EB2BC /* FirebaseAuth */; };
+		6716A7CD2FBEAE6D009EB2BC /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7CC2FBEAE6D009EB2BC /* FirebaseFirestore */; };
+		6716A7CF2FBEAE6D009EB2BC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7CE2FBEAE6D009EB2BC /* FirebaseStorage */; };
+		672EC4F72FBEB90000DA6FB7 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 672EC4F62FBEB90000DA6FB7 /* GoogleSignIn */; };
+		672EC4F92FBEB90000DA6FB7 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 672EC4F82FBEB90000DA6FB7 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		6716A7B52FBEA977009EB2BC /* matiapu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = matiapu.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -23,6 +33,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				672EC4F92FBEB90000DA6FB7 /* GoogleSignInSwift in Frameworks */,
+				6716A7CB2FBEAE6D009EB2BC /* FirebaseAuth in Frameworks */,
+				6701AEB82FC7CFA700A863D2 /* GoogleMaps in Frameworks */,
+				672EC4F72FBEB90000DA6FB7 /* GoogleSignIn in Frameworks */,
+				6716A7CD2FBEAE6D009EB2BC /* FirebaseFirestore in Frameworks */,
+				6716A7CF2FBEAE6D009EB2BC /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,6 +48,7 @@
 		6716A7AC2FBEA977009EB2BC = {
 			isa = PBXGroup;
 			children = (
+				6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */,
 				6716A7B72FBEA977009EB2BC /* matiapu */,
 				6716A7B62FBEA977009EB2BC /* Products */,
 			);
@@ -65,6 +82,12 @@
 			);
 			name = matiapu;
 			packageProductDependencies = (
+				6716A7CA2FBEAE6D009EB2BC /* FirebaseAuth */,
+				6716A7CC2FBEAE6D009EB2BC /* FirebaseFirestore */,
+				6716A7CE2FBEAE6D009EB2BC /* FirebaseStorage */,
+				672EC4F62FBEB90000DA6FB7 /* GoogleSignIn */,
+				672EC4F82FBEB90000DA6FB7 /* GoogleSignInSwift */,
+				6701AEB72FC7CFA700A863D2 /* GoogleMaps */,
 			);
 			productName = matiapu;
 			productReference = 6716A7B52FBEA977009EB2BC /* matiapu.app */;
@@ -94,6 +117,11 @@
 			);
 			mainGroup = 6716A7AC2FBEA977009EB2BC;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6716A7C92FBEAE6D009EB2BC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				672EC4F52FBEB90000DA6FB7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				6701AEB62FC7CFA700A863D2 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6716A7B62FBEA977009EB2BC /* Products */;
 			projectDirPath = "";
@@ -127,6 +155,7 @@
 /* Begin XCBuildConfiguration section */
 		6716A7C02FBEA97A009EB2BC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -191,6 +220,7 @@
 		};
 		6716A7C12FBEA97A009EB2BC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -248,14 +278,17 @@
 		};
 		6716A7C32FBEA97A009EB2BC /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = matiapu/matiapu.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K3BSAX58ZG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_GMSApiKey = "$(GOOGLE_MAPS_API_KEY)";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -280,14 +313,17 @@
 		};
 		6716A7C42FBEA97A009EB2BC /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = matiapu/matiapu.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K3BSAX58ZG;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_GMSApiKey = "$(GOOGLE_MAPS_API_KEY)";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -332,6 +368,66 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6701AEB62FC7CFA700A863D2 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.13.0;
+			};
+		};
+		6716A7C92FBEAE6D009EB2BC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.13.0;
+			};
+		};
+		672EC4F52FBEB90000DA6FB7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6701AEB72FC7CFA700A863D2 /* GoogleMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6701AEB62FC7CFA700A863D2 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
+			productName = GoogleMaps;
+		};
+		6716A7CA2FBEAE6D009EB2BC /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6716A7C92FBEAE6D009EB2BC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		6716A7CC2FBEAE6D009EB2BC /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6716A7C92FBEAE6D009EB2BC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		6716A7CE2FBEAE6D009EB2BC /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6716A7C92FBEAE6D009EB2BC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		672EC4F62FBEB90000DA6FB7 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 672EC4F52FBEB90000DA6FB7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		672EC4F82FBEB90000DA6FB7 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 672EC4F52FBEB90000DA6FB7 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6716A7AD2FBEA977009EB2BC /* Project object */;
 }
