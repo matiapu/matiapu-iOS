@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>GMSApiKey</key>
+	<string>$(GOOGLE_MAPS_API_KEY)</string>
+	<key>NSCameraUsageDescription</key>
+	<string>投稿用の写真を撮影するためにカメラへのアクセスが必要です。</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>投稿の位置情報をマップのピンとして保存するために位置情報へのアクセスが必要です。</string>
+</dict>
+</plist>
