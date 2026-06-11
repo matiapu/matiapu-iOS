@@ -6,7 +6,8 @@
 import CoreLocation
 
 enum MapConstants {
-  /// 調布市役所付近
-  static let chofuCenter = CLLocationCoordinate2D(latitude: 35.6514, longitude: 139.5447)
-  static let defaultZoom: Float = 13.0
+  static let defaultCenter = CLLocationCoordinate2D(latitude: 35.681228, longitude: 139.767052)
+  static let chofuCenter = defaultCenter
+  static let defaultZoom: Float = 14.0
+  static let focusedZoom: Float = 15.0
 }

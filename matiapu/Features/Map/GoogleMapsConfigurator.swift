@@ -3,11 +3,10 @@
 //  matiapu
 //
 
-import FirebaseCore
 import GoogleMaps
 
 enum GoogleMapsConfigurator {
-  private static var isConfigured = false
+  private(set) static var isConfigured = false
 
   @discardableResult
   static func configureIfNeeded() -> Bool {
@@ -25,7 +24,6 @@ enum GoogleMapsConfigurator {
     let candidates = [
       Bundle.main.object(forInfoDictionaryKey: "GMSApiKey") as? String,
       Bundle.main.object(forInfoDictionaryKey: "GOOGLE_MAPS_API_KEY") as? String,
-      FirebaseApp.app()?.options.apiKey,
     ]
 
     for candidate in candidates {
