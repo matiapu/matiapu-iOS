@@ -29,4 +29,12 @@ enum AppTypography {
     // MARK: - Map
 
     static let mapFilter = Font.system(size: 15, weight: .semibold)
+    static let mapCalloutTitle = Font.system(size: 18, weight: .bold)
+    static let mapCalloutButton = Font.system(size: 15, weight: .semibold)
+
+    // MARK: - Profile
+
+    static let profileArea = Font.system(size: 16, weight: .medium)
+    static let profileName = Font.system(size: 22, weight: .bold)
+    static let profileSettingsIcon = Font.system(size: 22, weight: .semibold)
 }

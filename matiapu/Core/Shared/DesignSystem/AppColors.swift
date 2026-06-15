@@ -6,9 +6,22 @@
 import SwiftUI
 
 enum AppColors {
+    // MARK: - Screen Background
+
+    static let screenBackgroundTop = Color(red: 43 / 255, green: 188 / 255, blue: 255 / 255)
+    static let screenBackgroundBottom = Color(red: 0 / 255, green: 74 / 255, blue: 153 / 255)
+
+    static var postScreenBackgroundGradient: LinearGradient {
+        LinearGradient(
+            colors: [screenBackgroundTop, screenBackgroundBottom],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
     // MARK: - Post
 
-    static let postScreenBackground = Color(red: 0.53, green: 0.79, blue: 0.92)
+    static let postScreenBackground = screenBackgroundTop
     static let postFABBackground = Color(red: 0.65, green: 0.84, blue: 0.95)
     static let postTag = Color(red: 1.0, green: 0.92, blue: 0.0)
     static let postCardPlaceholderTop = Color(red: 0.55, green: 0.65, blue: 0.75)
@@ -21,10 +34,17 @@ enum AppColors {
     ]
 
     static let createPostFieldBackground = Color.white
-    static let createPostTagSelected = Color.white
+    static let createPostTagSelected = Color(red: 210 / 255, green: 0 / 255, blue: 0 / 255)
+    static let createPostTagBorder = Color(red: 200 / 255, green: 200 / 255, blue: 200 / 255)
     static let createPostTagUnselected = Color.white.opacity(0.45)
     static let createPostPlaceholder = Color.gray.opacity(0.45)
     static let createPostLocationWarning = Color(red: 1.0, green: 0.85, blue: 0.85)
+
+    static let postDetailBackground = Color.white
+    static let postDetailImageBackground = Color(red: 0.94, green: 0.94, blue: 0.94)
+    static let postDetailText = Color.black
+    static let postDetailSecondaryText = Color.gray
+    static let postDetailAvatarBorder = Color.black.opacity(0.08)
 
     // MARK: - Map
 

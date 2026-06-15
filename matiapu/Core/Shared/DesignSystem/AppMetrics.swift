@@ -37,12 +37,36 @@ enum AppSpacing {
     static let createPostTagHorizontal: CGFloat = 14
     static let createPostTagVertical: CGFloat = 8
     static let createPostSubmitTop: CGFloat = 8
+
+    // post detail
+    static let postDetailHorizontal: CGFloat = 20
+    static let postDetailTop: CGFloat = 20
+    static let postDetailBottom: CGFloat = 32
+    static let postDetailSectionSpacing: CGFloat = 14
+
+    // map callout
+    static let mapCalloutPadding: CGFloat = 16
+    static let mapCalloutSpacing: CGFloat = 12
+    static let mapCalloutButtonVertical: CGFloat = 10
+    static let mapCalloutBottom: CGFloat = 16
+
+    // profile
+    static let profileHeaderSpacing: CGFloat = 16
+    static let profileNameSpacing: CGFloat = 8
+    static let profileNameHorizontal: CGFloat = 24
+    static let profileSettingsTrailing: CGFloat = 16
+    static let profileSettingsTop: CGFloat = 8
+    static let profileGridLoadingVertical: CGFloat = 40
+    static let profileGridSpacing: CGFloat = 1
+    static let profileTabBarInset: CGFloat = 96
 }
 
 enum AppRadius {
     static let postCard: CGFloat = 28
     static let createPostPhoto: CGFloat = 12
     static let createPostBodyField: CGFloat = 24
+    static let postDetailSheet: CGFloat = 20
+    static let mapCallout: CGFloat = 16
 }
 
 enum AppSize {
@@ -54,4 +78,9 @@ enum AppSize {
     static let createPostTitleFieldHeight: CGFloat = 48
     static let createPostBodyFieldMinHeight: CGFloat = 200
     static let createPostSubmitHeight: CGFloat = 48
+    static let postDetailImageHeightRatio: CGFloat = 0.46
+    static let profileHeaderHeightRatio: CGFloat = 0.4
+    static let profileGridColumns: Int = 3
+    static let profileAvatar: CGFloat = 100
+    static let profileSettingsButton: CGFloat = 44
 }
