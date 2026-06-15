@@ -22,6 +22,7 @@ protocol PostRepository: Sendable {
     func fetchMatchCandidates() async throws -> [Post]
     func fetchFeaturedPost() async throws -> Post?
     func fetchFeedPosts() async throws -> [Post]
+    func fetchUserPosts() async throws -> [Post]
     func recordSwipe(postId: String, action: PostSwipeAction) async throws
     func createPost(
         title: String,
@@ -57,6 +58,12 @@ final class MockPostRepository: PostRepository, @unchecked Sendable {
         PostPreviewData.feedCandidates
     }
 
+    func fetchUserPosts() async throws -> [Post] {
+        let created = locked { createdPosts }
+        return (created + PostPreviewData.userPosts)
+            .sorted { $0.postedAt > $1.postedAt }
+    }
+
     func recordSwipe(postId: String, action: PostSwipeAction) async throws {}
 
     func createPost(
@@ -73,7 +80,7 @@ final class MockPostRepository: PostRepository, @unchecked Sendable {
             title: title,
             body: body,
             postedAt: .now,
-            imageName: "PostSample",
+            imageName: MockImages.postImage(at: locked { createdPosts.count }),
             location: location
         )
 

@@ -17,13 +17,19 @@ final class AppViewModels {
 
     init(dependencies: AppDependencies) {
         let postRepository = dependencies.postRepository
+        let profileViewModel = ProfileViewModel(
+            authRepository: dependencies.authRepository,
+            postRepository: postRepository
+        )
+
         map = MapViewModel(postRepository: postRepository)
         post = PostViewModel(postRepository: postRepository)
         match = MatchViewModel(postRepository: postRepository)
-        profile = ProfileViewModel(authRepository: dependencies.authRepository)
+        profile = profileViewModel
 
         post.onPostCreated = { [weak map] in
             await map?.loadPosts()
+            await profileViewModel.loadProfile()
         }
     }
 }
