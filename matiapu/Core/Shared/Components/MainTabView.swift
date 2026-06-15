@@ -10,7 +10,7 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
-            MapView(viewModel: viewModels.map)
+            MapView(viewModel: viewModels.map, postViewModel: viewModels.post)
                 .tabItem {
                     Label("map", systemImage: "mappin.and.ellipse")
                 }

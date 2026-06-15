@@ -7,20 +7,25 @@ import SwiftUI
 
 struct MapView: View {
     @Bindable var viewModel: MapViewModel
+    @Bindable var postViewModel: PostViewModel
     @State private var isMapReady = false
 
     var body: some View {
         ZStack(alignment: .top) {
             if isMapReady {
-                GoogleMapView(posts: viewModel.posts)
-                    .ignoresSafeArea()
+                GoogleMapView(
+                    posts: viewModel.posts,
+                    onMarkerTap: viewModel.selectPost,
+                    onMapTap: viewModel.dismissSelectedPost
+                )
+                .ignoresSafeArea()
             } else {
-                AppColors.postScreenBackground
+                AppColors.postScreenBackgroundGradient
                     .ignoresSafeArea()
             }
 
             VStack(spacing: AppSpacing.mapFilterSpacing) {
-                filterButtons
+                topControls
 
                 if viewModel.isLoading {
                     loadingBanner
@@ -29,14 +34,73 @@ struct MapView: View {
                 if let errorMessage = viewModel.errorMessage {
                     errorBanner(errorMessage)
                 }
+
+                Spacer()
+
+                if let selectedPost = viewModel.selectedPost {
+                    MapPinCalloutView(
+                        post: selectedPost,
+                        onOpenDetail: viewModel.openDetail
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
             }
             .padding(.horizontal, AppSpacing.screenHorizontal)
-            .padding(.top, 8)
+            .animation(.easeInOut(duration: 0.2), value: viewModel.selectedPost?.id)
+        }
+        .sheet(item: $viewModel.detailPost) { post in
+            PostDetailView(post: post, display: .postDetail)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(AppRadius.postDetailSheet)
+        }
+        .fullScreenCover(isPresented: cameraPresentation) {
+            CameraImagePicker(
+                onCapture: postViewModel.handleCapturedImage,
+                onCancel: postViewModel.cancelCamera
+            )
+            .ignoresSafeArea()
+        }
+        .sheet(item: createPostPresentation) { createPostViewModel in
+            CreatePostView(viewModel: createPostViewModel)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
         .task {
             isMapReady = true
             await viewModel.loadPosts()
         }
+    }
+
+    private var cameraPresentation: Binding<Bool> {
+        Binding(
+            get: { postViewModel.isCameraPresented },
+            set: { isPresented in
+                if !isPresented {
+                    postViewModel.cancelCamera()
+                }
+            }
+        )
+    }
+
+    private var createPostPresentation: Binding<CreatePostViewModel?> {
+        Binding(
+            get: { postViewModel.createPostViewModel },
+            set: { newValue in
+                if newValue == nil {
+                    postViewModel.dismissCreatePost()
+                }
+            }
+        )
+    }
+
+    private var topControls: some View {
+        HStack(alignment: .center, spacing: AppSpacing.mapFilterSpacing) {
+            filterButtons
+
+            CreatePostGlassButton(action: postViewModel.openCreatePost)
+        }
+        .padding(.top, AppSpacing.screenTop)
     }
 
     private var filterButtons: some View {
@@ -49,6 +113,7 @@ struct MapView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var allFilterButton: some View {
@@ -129,5 +194,8 @@ struct MapView: View {
 }
 
 #Preview {
-    MapView(viewModel: MapViewModel(postRepository: MockPostRepository()))
+    MapView(
+        viewModel: MapViewModel(postRepository: MockPostRepository()),
+        postViewModel: .preview
+    )
 }
