@@ -7,6 +7,8 @@ import SwiftUI
 
 /// 画面ごとに表示する項目を切り替える
 struct PostCardDisplay {
+    let showsAvatar: Bool
+    let showsAuthorName: Bool
     let showsPostedDate: Bool
     let showsTitle: Bool
     let showsTag: Bool
@@ -14,6 +16,8 @@ struct PostCardDisplay {
     let collapsedBodyLineLimit: Int?
 
     static let postFeed = PostCardDisplay(
+        showsAvatar: true,
+        showsAuthorName: true,
         showsPostedDate: true,
         showsTitle: true,
         showsTag: true,
@@ -22,8 +26,30 @@ struct PostCardDisplay {
     )
 
     static let match = PostCardDisplay(
-        showsPostedDate: false,
-        showsTitle: false,
+        showsAvatar: false,
+        showsAuthorName: true,
+        showsPostedDate: true,
+        showsTitle: true,
+        showsTag: true,
+        showsSeeMoreLink: true,
+        collapsedBodyLineLimit: 5
+    )
+
+    static let postDetail = PostCardDisplay(
+        showsAvatar: true,
+        showsAuthorName: true,
+        showsPostedDate: true,
+        showsTitle: true,
+        showsTag: true,
+        showsSeeMoreLink: false,
+        collapsedBodyLineLimit: nil
+    )
+
+    static let matchDetail = PostCardDisplay(
+        showsAvatar: false,
+        showsAuthorName: true,
+        showsPostedDate: true,
+        showsTitle: true,
         showsTag: true,
         showsSeeMoreLink: false,
         collapsedBodyLineLimit: nil
@@ -47,7 +73,9 @@ struct PostCardView: View {
             )
 
             VStack(alignment: .leading, spacing: AppSpacing.cardSectionSpacing) {
-                headerRow
+                if display.showsAuthorName {
+                    authorNameSection
+                }
                 if display.showsTitle {
                     titleSection
                 }
@@ -86,23 +114,32 @@ struct PostCardView: View {
         }
     }
 
-    private var headerRow: some View {
-        HStack(spacing: AppSpacing.cardHeaderSpacing) {
-            Circle()
-                .fill(AppColors.avatarPlaceholder)
-                .frame(width: AppSize.avatar, height: AppSize.avatar)
+    @ViewBuilder
+    private var authorNameSection: some View {
+        if display.showsAvatar || display.showsPostedDate {
+            HStack(spacing: AppSpacing.cardHeaderSpacing) {
+                if display.showsAvatar {
+                    Circle()
+                        .fill(AppColors.avatarPlaceholder)
+                        .frame(width: AppSize.avatar, height: AppSize.avatar)
+                }
 
+                Text(post.authorName)
+                    .font(AppTypography.cardAuthorName)
+                    .foregroundStyle(AppColors.onImageText)
+
+                Spacer()
+
+                if display.showsPostedDate {
+                    Text(post.formattedDate)
+                        .font(AppTypography.cardDate)
+                        .foregroundStyle(AppColors.onImageText)
+                }
+            }
+        } else {
             Text(post.authorName)
                 .font(AppTypography.cardAuthorName)
                 .foregroundStyle(AppColors.onImageText)
-
-            Spacer()
-
-            if display.showsPostedDate {
-                Text(post.formattedDate)
-                    .font(AppTypography.cardDate)
-                    .foregroundStyle(AppColors.onImageText)
-            }
         }
     }
 
@@ -167,15 +204,16 @@ struct PostCardView: View {
         onSeeMore: {}
     )
     .padding()
-    .background(AppColors.postScreenBackground)
+    .background(AppColors.postScreenBackgroundGradient)
 }
 
 #Preview("Match") {
     PostCardView(
         post: PostPreviewData.match,
         display: .match,
-        isBodyExpanded: true,
+        isBodyExpanded: false,
         onSeeMore: {}
     )
     .padding()
+    .background(AppColors.postScreenBackgroundGradient)
 }

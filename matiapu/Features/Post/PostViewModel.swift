@@ -12,9 +12,8 @@ import UIKit
 @MainActor
 final class PostViewModel {
     private(set) var post: Post?
-    private(set) var isBodyExpanded = false
+    var detailPost: Post?
     private(set) var isCameraPresented = false
-    private(set) var isCreatePostPresented = false
     private(set) var capturedImage: UIImage?
     private(set) var capturedLocation: PostLocation?
     private(set) var createPostViewModel: CreatePostViewModel?
@@ -24,14 +23,10 @@ final class PostViewModel {
 
     private var swipeQueue = PostSwipeQueue()
     private let postRepository: any PostRepository
-    private let locationCaptureService: LocationCaptureService
+    private var locationCaptureService: LocationCaptureService?
 
-    init(
-        postRepository: any PostRepository,
-        initialQueue: [Post]? = nil
-    ) {
+    init(postRepository: any PostRepository, initialQueue: [Post]? = nil) {
         self.postRepository = postRepository
-        self.locationCaptureService = LocationCaptureService()
         if let initialQueue {
             swipeQueue = PostSwipeQueue(candidates: initialQueue)
             post = swipeQueue.current
@@ -51,7 +46,7 @@ final class PostViewModel {
     func handleSwipe(_ action: PostSwipeAction) {
         guard let current = post else { return }
 
-        isBodyExpanded = false
+        detailPost = nil
         if swipeQueue.advance(with: action) != nil {
             Task {
                 try? await postRepository.recordSwipe(postId: current.id, action: action)
@@ -60,13 +55,13 @@ final class PostViewModel {
         post = swipeQueue.current
     }
 
-    func toggleBodyExpanded() {
-        isBodyExpanded.toggle()
+    func openDetail() {
+        detailPost = post
     }
 
     func openCreatePost() {
         guard UIImagePickerController.isSourceTypeAvailable(.camera) else { return }
-        locationCaptureService.prepareForCapture()
+        locationService.prepareForCapture()
         isCameraPresented = true
     }
 
@@ -80,7 +75,7 @@ final class PostViewModel {
                 photoCoordinate: coordinate,
                 deviceCoordinate: deviceCoordinate
             )
-            locationCaptureService.stopCapture()
+            locationService.stopCapture()
 
             createPostViewModel = CreatePostViewModel(
                 capturedImage: image,
@@ -94,32 +89,37 @@ final class PostViewModel {
                     }
                 }
             )
-            isCreatePostPresented = true
         }
-    }
-
-    private func resolvedDeviceCoordinate(fallbackPhotoCoordinate: CLLocationCoordinate2D?) async -> CLLocationCoordinate2D? {
-        if fallbackPhotoCoordinate != nil {
-            return locationCaptureService.currentCoordinate
-        }
-
-        if let currentCoordinate = locationCaptureService.currentCoordinate {
-            return currentCoordinate
-        }
-
-        return await locationCaptureService.waitForLocation()
     }
 
     func cancelCamera() {
-        locationCaptureService.stopCapture()
+        locationService.stopCapture()
         isCameraPresented = false
     }
 
     func dismissCreatePost() {
-        isCreatePostPresented = false
         capturedImage = nil
         capturedLocation = nil
         createPostViewModel = nil
+    }
+
+    private var locationService: LocationCaptureService {
+        if locationCaptureService == nil {
+            locationCaptureService = LocationCaptureService()
+        }
+        return locationCaptureService!
+    }
+
+    private func resolvedDeviceCoordinate(fallbackPhotoCoordinate: CLLocationCoordinate2D?) async -> CLLocationCoordinate2D? {
+        if fallbackPhotoCoordinate != nil {
+            return locationService.currentCoordinate
+        }
+
+        if let currentCoordinate = locationService.currentCoordinate {
+            return currentCoordinate
+        }
+
+        return await locationService.waitForLocation()
     }
 }
 

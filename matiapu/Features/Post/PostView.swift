@@ -9,24 +9,18 @@ struct PostView: View {
     @Bindable var viewModel: PostViewModel
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            AppColors.postScreenBackground
-                .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-
-                postCardContent
-                    .padding(.horizontal, AppSpacing.screenHorizontal)
-
-                Spacer(minLength: 0)
+        PostFeedScreen(
+            post: viewModel.post,
+            display: .postFeed,
+            detailDisplay: .postDetail,
+            isLoading: viewModel.isLoading,
+            detailPost: $viewModel.detailPost,
+            onSeeMore: viewModel.openDetail,
+            onSwipe: viewModel.handleSwipe,
+            overlay: {
+                CreatePostFAB(action: viewModel.openCreatePost)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            createPostButton
-                .padding(.trailing, AppSpacing.fabTrailing)
-                .padding(.top, AppSpacing.screenTop)
-        }
+        )
         .task {
             await viewModel.loadPosts()
         }
@@ -37,12 +31,10 @@ struct PostView: View {
             )
             .ignoresSafeArea()
         }
-        .sheet(isPresented: createPostPresentation) {
-            if let createPostViewModel = viewModel.createPostViewModel {
-                CreatePostView(viewModel: createPostViewModel)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-            }
+        .sheet(item: createPostPresentation) { createPostViewModel in
+            CreatePostView(viewModel: createPostViewModel)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -57,51 +49,15 @@ struct PostView: View {
         )
     }
 
-    private var createPostPresentation: Binding<Bool> {
+    private var createPostPresentation: Binding<CreatePostViewModel?> {
         Binding(
-            get: { viewModel.isCreatePostPresented },
-            set: { isPresented in
-                if !isPresented {
+            get: { viewModel.createPostViewModel },
+            set: { newValue in
+                if newValue == nil {
                     viewModel.dismissCreatePost()
                 }
             }
         )
-    }
-
-    @ViewBuilder
-    private var postCardContent: some View {
-        if let post = viewModel.post {
-            SwipeablePostCard(
-                post: post,
-                display: .postFeed,
-                isBodyExpanded: viewModel.isBodyExpanded,
-                onSeeMore: viewModel.toggleBodyExpanded,
-                onSwipe: viewModel.handleSwipe
-            )
-            .id(post.id)
-        } else if viewModel.isLoading {
-            ProgressView()
-                .tint(AppColors.onImageText)
-                .frame(width: AppSize.postCardWidth, height: AppSize.postCardHeight)
-        } else {
-            ContentUnavailableView(
-                "投稿がありません",
-                systemImage: "rectangle.stack"
-            )
-            .frame(width: AppSize.postCardWidth, height: AppSize.postCardHeight)
-        }
-    }
-
-    private var createPostButton: some View {
-        Button(action: viewModel.openCreatePost) {
-            Image(systemName: "plus")
-                .font(AppTypography.fabIcon)
-                .foregroundStyle(AppColors.onFABIcon)
-                .frame(width: AppSize.fab, height: AppSize.fab)
-                .background(Circle().fill(AppColors.postFABBackground))
-                .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
-        }
-        .buttonStyle(.plain)
     }
 }
 

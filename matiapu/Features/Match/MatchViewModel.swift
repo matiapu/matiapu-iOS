@@ -10,6 +10,7 @@ import Observation
 @MainActor
 final class MatchViewModel {
     private(set) var currentPost: Post?
+    var detailPost: Post?
     private(set) var isLoading = false
 
     private var swipeQueue = PostSwipeQueue()
@@ -36,9 +37,14 @@ final class MatchViewModel {
         currentPost = swipeQueue.current
     }
 
+    func openDetail() {
+        detailPost = currentPost
+    }
+
     func handleSwipe(_ action: PostSwipeAction) {
         guard let post = currentPost else { return }
 
+        detailPost = nil
         if swipeQueue.advance(with: action) != nil {
             Task {
                 try? await postRepository.recordSwipe(postId: post.id, action: action)
