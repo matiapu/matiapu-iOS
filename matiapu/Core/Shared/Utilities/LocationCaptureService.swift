@@ -13,7 +13,7 @@ final class LocationCaptureService: NSObject {
     private(set) var authorizationStatus: CLAuthorizationStatus
 
     override init() {
-        authorizationStatus = CLLocationManager.authorizationStatus()
+        authorizationStatus = manager.authorizationStatus
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
