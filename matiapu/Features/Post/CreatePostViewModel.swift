@@ -9,7 +9,8 @@ import UIKit
 
 @Observable
 @MainActor
-final class CreatePostViewModel {
+final class CreatePostViewModel: Identifiable {
+    let id = UUID()
     var title = ""
     var body = ""
     var selectedTag: MapFilter = .disaster
@@ -75,7 +76,7 @@ final class CreatePostViewModel {
 extension CreatePostViewModel {
     static func preview(onComplete: @escaping () -> Void = {}) -> CreatePostViewModel {
         CreatePostViewModel(
-            capturedImage: UIImage(named: "PostSample") ?? UIImage(),
+            capturedImage: UIImage(named: MockImages.postImage(at: 0)) ?? UIImage(),
             capturedLocation: PostLocation(latitude: 35.681228, longitude: 139.767052),
             postRepository: MockPostRepository(),
             onComplete: onComplete

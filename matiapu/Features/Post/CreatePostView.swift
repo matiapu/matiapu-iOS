@@ -34,7 +34,7 @@ struct CreatePostView: View {
             .padding(.bottom, AppSpacing.createPostBottom)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(AppColors.postScreenBackground.ignoresSafeArea())
+        .background(AppColors.postScreenBackgroundGradient.ignoresSafeArea())
     }
 
     private var photoPreview: some View {
@@ -184,6 +184,12 @@ struct CreatePostView: View {
                                 ? AppColors.createPostTagSelected
                                 : AppColors.createPostTagUnselected
                         )
+                        .overlay {
+                            if isSelected {
+                                Capsule(style: .continuous)
+                                    .strokeBorder(AppColors.createPostTagBorder, lineWidth: 1)
+                            }
+                        }
                 )
         }
         .buttonStyle(.plain)
