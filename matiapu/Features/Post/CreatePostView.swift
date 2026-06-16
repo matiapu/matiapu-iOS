@@ -15,43 +15,59 @@ struct CreatePostView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppSpacing.createPostSectionSpacing) {
-                photoPreview
-                titleSection
-                bodySection
-                tagSection
-                locationSection
-                if let submitError = viewModel.submitError {
-                    submitErrorSection(submitError)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppSpacing.createPostSectionSpacing) {
+                    photoPreview(maxHeight: geometry.size.height * AppSize.postDetailImageHeightRatio)
+                    titleSection
+                    bodySection
+                    tagSection
+                    locationSection
+                    if let submitError = viewModel.submitError {
+                        submitErrorSection(submitError)
+                    }
+                    submitButton
                 }
-                submitButton
+                .frame(maxWidth: AppSize.postCardWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, AppSpacing.screenHorizontal)
+                .padding(.top, AppSpacing.createPostTop)
+                .padding(.bottom, AppSpacing.createPostBottom)
             }
-            .frame(maxWidth: AppSize.postCardWidth)
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, AppSpacing.screenHorizontal)
-            .padding(.top, AppSpacing.createPostTop)
-            .padding(.bottom, AppSpacing.createPostBottom)
+            .scrollDismissesKeyboard(.interactively)
         }
-        .scrollDismissesKeyboard(.interactively)
         .background(AppColors.postScreenBackgroundGradient.ignoresSafeArea())
     }
 
-    private var photoPreview: some View {
-        Color.clear
-            .aspectRatio(AppSize.postCardAspectRatio, contentMode: .fit)
-            .frame(maxWidth: AppSize.postCardWidth)
-            .frame(maxWidth: .infinity)
-            .overlay {
-                Image(uiImage: viewModel.capturedImage)
-                    .resizable()
-                    .scaledToFill()
-            }
+    private func photoPreview(maxHeight: CGFloat) -> some View {
+        let fittedSize = fittedImageSize(
+            image: viewModel.capturedImage,
+            maxWidth: AppSize.postCardWidth,
+            maxHeight: maxHeight
+        )
+
+        return Image(uiImage: viewModel.capturedImage)
+            .resizable()
+            .frame(width: fittedSize.width, height: fittedSize.height)
             .clipShape(RoundedRectangle(cornerRadius: AppRadius.createPostPhoto, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: AppRadius.createPostPhoto, style: .continuous)
-                    .strokeBorder(AppColors.onImageText, lineWidth: 2)
+                    .stroke(AppColors.onImageText, lineWidth: 2)
             }
+            .frame(maxWidth: .infinity)
+    }
+
+    private func fittedImageSize(image: UIImage, maxWidth: CGFloat, maxHeight: CGFloat) -> CGSize {
+        let imageSize = image.size
+        guard imageSize.width > 0, imageSize.height > 0 else {
+            return CGSize(width: maxWidth, height: maxHeight)
+        }
+
+        let scale = min(maxWidth / imageSize.width, maxHeight / imageSize.height)
+        return CGSize(
+            width: floor(imageSize.width * scale),
+            height: floor(imageSize.height * scale)
+        )
     }
 
     private var titleSection: some View {
@@ -171,26 +187,21 @@ struct CreatePostView: View {
         } label: {
             Text(tag.title)
                 .font(AppTypography.createPostTag)
-                .foregroundStyle(AppColors.onTagText)
+                .fontWeight(isSelected ? .bold : .regular)
+                .foregroundStyle(isSelected ? Color.white : Color.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, AppSpacing.createPostTagVertical)
                 .padding(.horizontal, AppSpacing.createPostTagHorizontal)
-                .background(
+                .background {
                     Capsule(style: .continuous)
-                        .fill(
-                            isSelected
-                                ? AppColors.createPostTagSelected
-                                : AppColors.createPostTagUnselected
-                        )
-                        .overlay {
-                            if isSelected {
-                                Capsule(style: .continuous)
-                                    .strokeBorder(AppColors.createPostTagBorder, lineWidth: 1)
-                            }
-                        }
-                )
+                        .fill(isSelected ? tag.pinColor : AppColors.mapFilterUnselected)
+                }
+                .overlay {
+                    Capsule(style: .continuous)
+                        .stroke(tag.pinColor, lineWidth: isSelected ? 0 : 1)
+                }
         }
         .buttonStyle(.plain)
     }
