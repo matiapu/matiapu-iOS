@@ -127,21 +127,9 @@ struct ProfileView: View {
 
     @ViewBuilder
     private func postThumbnail(for post: Post, size: CGFloat) -> some View {
-        Group {
-            if let imageName = post.imageName, !imageName.isEmpty {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                LinearGradient(
-                    colors: [AppColors.postCardPlaceholderTop, AppColors.postCardPlaceholderBottom],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            }
-        }
-        .frame(width: size, height: size)
-        .clipped()
+        PostImageView(post: post, contentMode: .fill)
+            .frame(width: size, height: size)
+            .clipped()
     }
 }
 

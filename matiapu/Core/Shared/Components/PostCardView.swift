@@ -56,6 +56,22 @@ struct PostCardDisplay {
     )
 }
 
+struct PostSeeMoreButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text("続きを見る")
+                .font(AppTypography.cardSeeMore)
+                .foregroundStyle(AppColors.onImageText)
+        }
+        .buttonStyle(.plain)
+        .highPriorityGesture(
+            TapGesture().onEnded { action() }
+        )
+    }
+}
+
 struct PostCardView: View {
     let post: Post
     let display: PostCardDisplay
@@ -96,21 +112,9 @@ struct PostCardView: View {
     @ViewBuilder
     private var cardBackground: some View {
         GeometryReader { geometry in
-            Group {
-                if let imageName = post.imageName, !imageName.isEmpty {
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFill()
-                } else {
-                    LinearGradient(
-                        colors: [AppColors.postCardPlaceholderTop, AppColors.postCardPlaceholderBottom],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                }
-            }
-            .frame(width: geometry.size.width, height: geometry.size.height)
-            .clipped()
+            PostImageView(post: post, contentMode: .fill)
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipped()
         }
     }
 
@@ -177,12 +181,7 @@ struct PostCardView: View {
             if display.showsSeeMoreLink {
                 HStack {
                     Spacer()
-                    Button(action: onSeeMore) {
-                        Text("続きを見る")
-                            .font(AppTypography.cardSeeMore)
-                            .foregroundStyle(AppColors.onImageText)
-                    }
-                    .buttonStyle(.plain)
+                    PostSeeMoreButton(action: onSeeMore)
                 }
             }
         }

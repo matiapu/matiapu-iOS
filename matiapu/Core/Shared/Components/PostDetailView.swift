@@ -25,17 +25,11 @@ struct PostDetailView: View {
     @ViewBuilder
     private func heroImage(maxHeight: CGFloat) -> some View {
         Group {
-            if let imageName = post.imageName, !imageName.isEmpty {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFit()
+            if post.imageData != nil || (post.imageName?.isEmpty == false) {
+                PostImageView(post: post, contentMode: .fit)
             } else {
-                LinearGradient(
-                    colors: [AppColors.postCardPlaceholderTop, AppColors.postCardPlaceholderBottom],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .frame(height: maxHeight)
+                PostImagePlaceholder()
+                    .frame(height: maxHeight)
             }
         }
         .frame(maxWidth: .infinity)
