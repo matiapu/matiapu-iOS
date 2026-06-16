@@ -29,6 +29,9 @@ struct MapPinCalloutView: View {
                     )
             }
             .buttonStyle(.plain)
+            .highPriorityGesture(
+                TapGesture().onEnded { onOpenDetail() }
+            )
         }
         .padding(AppSpacing.mapCalloutPadding)
         .background(

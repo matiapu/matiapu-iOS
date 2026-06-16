@@ -50,7 +50,8 @@ final class MapViewModel {
     }
 
     func openDetail() {
+        guard let selectedPost else { return }
         detailPost = selectedPost
-        selectedPost = nil
+        self.selectedPost = nil
     }
 }
