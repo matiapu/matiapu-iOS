@@ -8,9 +8,7 @@ import SwiftUI
 struct PostFeedScreen<Overlay: View>: View {
     let post: Post?
     let display: PostCardDisplay
-    let detailDisplay: PostCardDisplay
     let isLoading: Bool
-    @Binding var detailPost: Post?
     let onSeeMore: () -> Void
     let onSwipe: (PostSwipeAction) -> Void
     @ViewBuilder let overlay: () -> Overlay
@@ -31,12 +29,6 @@ struct PostFeedScreen<Overlay: View>: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             overlay()
-        }
-        .sheet(item: $detailPost) { post in
-            PostDetailView(post: post, display: detailDisplay)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(AppRadius.postDetailSheet)
         }
     }
 
@@ -69,17 +61,13 @@ extension PostFeedScreen where Overlay == EmptyView {
     init(
         post: Post?,
         display: PostCardDisplay,
-        detailDisplay: PostCardDisplay,
         isLoading: Bool,
-        detailPost: Binding<Post?>,
         onSeeMore: @escaping () -> Void,
         onSwipe: @escaping (PostSwipeAction) -> Void
     ) {
         self.post = post
         self.display = display
-        self.detailDisplay = detailDisplay
         self.isLoading = isLoading
-        self._detailPost = detailPost
         self.onSeeMore = onSeeMore
         self.onSwipe = onSwipe
         self.overlay = { EmptyView() }
@@ -114,9 +102,7 @@ struct CreatePostFAB: View {
     PostFeedScreen(
         post: PostPreviewData.featured,
         display: .postFeed,
-        detailDisplay: .postDetail,
         isLoading: false,
-        detailPost: .constant(nil),
         onSeeMore: {},
         onSwipe: { _ in },
         overlay: {
@@ -129,9 +115,7 @@ struct CreatePostFAB: View {
     PostFeedScreen(
         post: PostPreviewData.match,
         display: .match,
-        detailDisplay: .matchDetail,
         isLoading: false,
-        detailPost: .constant(nil),
         onSeeMore: {},
         onSwipe: { _ in }
     )

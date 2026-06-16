@@ -12,9 +12,7 @@ struct PostView: View {
         PostFeedScreen(
             post: viewModel.post,
             display: .postFeed,
-            detailDisplay: .postDetail,
             isLoading: viewModel.isLoading,
-            detailPost: $viewModel.detailPost,
             onSeeMore: viewModel.openDetail,
             onSwipe: viewModel.handleSwipe,
             overlay: {
@@ -24,17 +22,18 @@ struct PostView: View {
         .task {
             await viewModel.loadPosts()
         }
+        .sheet(item: $viewModel.detailPost) { post in
+            PostDetailView(post: post, display: .postDetail)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(AppRadius.postDetailSheet)
+        }
         .fullScreenCover(isPresented: cameraPresentation) {
             CameraImagePicker(
                 onCapture: viewModel.handleCapturedImage,
                 onCancel: viewModel.cancelCamera
             )
             .ignoresSafeArea()
-        }
-        .sheet(item: createPostPresentation) { createPostViewModel in
-            CreatePostView(viewModel: createPostViewModel)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
         }
     }
 
@@ -44,17 +43,6 @@ struct PostView: View {
             set: { isPresented in
                 if !isPresented {
                     viewModel.cancelCamera()
-                }
-            }
-        )
-    }
-
-    private var createPostPresentation: Binding<CreatePostViewModel?> {
-        Binding(
-            get: { viewModel.createPostViewModel },
-            set: { newValue in
-                if newValue == nil {
-                    viewModel.dismissCreatePost()
                 }
             }
         )

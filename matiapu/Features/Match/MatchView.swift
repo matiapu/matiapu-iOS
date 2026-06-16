@@ -12,14 +12,18 @@ struct MatchView: View {
         PostFeedScreen(
             post: viewModel.currentPost,
             display: .match,
-            detailDisplay: .matchDetail,
             isLoading: viewModel.isLoading,
-            detailPost: $viewModel.detailPost,
             onSeeMore: viewModel.openDetail,
             onSwipe: viewModel.handleSwipe
         )
         .task {
             await viewModel.loadPosts()
+        }
+        .sheet(item: $viewModel.detailPost) { post in
+            PostDetailView(post: post, display: .matchDetail)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(AppRadius.postDetailSheet)
         }
     }
 }

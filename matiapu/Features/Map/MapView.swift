@@ -61,11 +61,6 @@ struct MapView: View {
             )
             .ignoresSafeArea()
         }
-        .sheet(item: createPostPresentation) { createPostViewModel in
-            CreatePostView(viewModel: createPostViewModel)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-        }
         .task {
             isMapReady = true
             await viewModel.loadPosts()
@@ -78,17 +73,6 @@ struct MapView: View {
             set: { isPresented in
                 if !isPresented {
                     postViewModel.cancelCamera()
-                }
-            }
-        )
-    }
-
-    private var createPostPresentation: Binding<CreatePostViewModel?> {
-        Binding(
-            get: { postViewModel.createPostViewModel },
-            set: { newValue in
-                if newValue == nil {
-                    postViewModel.dismissCreatePost()
                 }
             }
         )

@@ -6,7 +6,7 @@
 import SwiftUI
 
 struct MainTabView: View {
-    var viewModels: AppViewModels
+    @Bindable var viewModels: AppViewModels
 
     var body: some View {
         TabView {
@@ -31,6 +31,22 @@ struct MainTabView: View {
                 }
         }
         .tint(.blue)
+        .sheet(item: createPostPresentation) { createPostViewModel in
+            CreatePostView(viewModel: createPostViewModel)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
+    }
+
+    private var createPostPresentation: Binding<CreatePostViewModel?> {
+        Binding(
+            get: { viewModels.post.createPostViewModel },
+            set: { newValue in
+                if newValue == nil {
+                    viewModels.post.dismissCreatePost()
+                }
+            }
+        )
     }
 }
 
