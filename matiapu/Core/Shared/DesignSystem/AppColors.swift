@@ -34,9 +34,6 @@ enum AppColors {
     ]
 
     static let createPostFieldBackground = Color.white
-    static let createPostTagSelected = Color(red: 210 / 255, green: 0 / 255, blue: 0 / 255)
-    static let createPostTagBorder = Color(red: 200 / 255, green: 200 / 255, blue: 200 / 255)
-    static let createPostTagUnselected = Color.white.opacity(0.45)
     static let createPostPlaceholder = Color.gray.opacity(0.45)
     static let createPostLocationWarning = Color(red: 1.0, green: 0.85, blue: 0.85)
 
