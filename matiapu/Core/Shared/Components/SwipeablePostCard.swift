@@ -30,7 +30,7 @@ struct SwipeablePostCard: View {
         )
         .offset(offset)
         .rotationEffect(.degrees(rotation))
-        .highPriorityGesture(dragGesture)
+        .gesture(dragGesture)
     }
 
     private var dragGesture: some Gesture {
