@@ -13,14 +13,56 @@ struct Post: Identifiable, Hashable {
     let title: String
     let body: String
     let postedAt: Date
+    /// Asset カタログ上の画像名（モックデータ用）。
     let imageName: String?
+    /// ユーザーが実際に撮影・投稿した写真の画像データ。
+    let imageData: Data?
     let location: PostLocation?
+
+    init(
+        id: String,
+        authorName: String,
+        tag: String,
+        title: String,
+        body: String,
+        postedAt: Date,
+        imageName: String? = nil,
+        imageData: Data? = nil,
+        location: PostLocation?
+    ) {
+        self.id = id
+        self.authorName = authorName
+        self.tag = tag
+        self.title = title
+        self.body = body
+        self.postedAt = postedAt
+        self.imageName = imageName
+        self.imageData = imageData
+        self.location = location
+    }
 
     var formattedDate: String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "ja_JP")
         formatter.dateFormat = "yyyy/M/d"
         return formatter.string(from: postedAt)
+    }
+
+    // 画像データは比較・ハッシュ対象から除外し、一意な id でアイデンティティを表す。
+    // （大きな Data のハッシュ計算を避けつつ、リスト描画の差分検出を高速に保つため）
+    static func == (lhs: Post, rhs: Post) -> Bool {
+        lhs.id == rhs.id
+            && lhs.authorName == rhs.authorName
+            && lhs.tag == rhs.tag
+            && lhs.title == rhs.title
+            && lhs.body == rhs.body
+            && lhs.postedAt == rhs.postedAt
+            && lhs.imageName == rhs.imageName
+            && lhs.location == rhs.location
+    }
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
