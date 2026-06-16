@@ -15,6 +15,7 @@ struct MapView: View {
             if isMapReady {
                 GoogleMapView(
                     posts: viewModel.posts,
+                    selectedPostID: viewModel.selectedPost?.id,
                     onMarkerTap: viewModel.selectPost,
                     onMapTap: viewModel.dismissSelectedPost
                 )

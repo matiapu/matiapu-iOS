@@ -47,24 +47,32 @@ enum MapCategoryStyle {
 }
 
 enum MapPinMarkerFactory {
-    static func makeIcon(for filter: MapFilter) -> UIImage {
-        makeIcon(backgroundColor: filter.pinUIColor, glyph: filter.glyph)
+    static let markerSize = CGSize(width: 44, height: 52)
+    static let selectedScale: CGFloat = 1.28
+    static let selectionAnimationDuration: TimeInterval = 0.28
+
+    static func makeIcon(for filter: MapFilter, isSelected: Bool = false) -> UIImage {
+        makeIcon(backgroundColor: filter.pinUIColor, glyph: filter.glyph, isSelected: isSelected)
     }
 
-    static func makeIcon(forTag tag: String) -> UIImage {
+    static func makeIcon(forTag tag: String, isSelected: Bool = false) -> UIImage {
         if let filter = MapFilter.from(tag: tag) {
-            return makeIcon(for: filter)
+            return makeIcon(for: filter, isSelected: isSelected)
         }
 
         return makeIcon(
             backgroundColor: MapCategoryStyle.defaultPinUIColor,
-            glyph: MapCategoryStyle.defaultGlyph
+            glyph: MapCategoryStyle.defaultGlyph,
+            isSelected: isSelected
         )
     }
 
-    private static func makeIcon(backgroundColor: UIColor, glyph: String) -> UIImage {
-        let size = CGSize(width: 44, height: 52)
-        let renderer = UIGraphicsImageRenderer(size: size)
+    private static func makeIcon(backgroundColor: UIColor, glyph: String, isSelected: Bool) -> UIImage {
+        drawIcon(backgroundColor: backgroundColor, glyph: glyph, isSelected: isSelected)
+    }
+
+    private static func drawIcon(backgroundColor: UIColor, glyph: String, isSelected: Bool) -> UIImage {
+        let renderer = UIGraphicsImageRenderer(size: markerSize)
 
         return renderer.image { _ in
             let headRect = CGRect(x: 2, y: 2, width: 40, height: 40)
@@ -73,11 +81,11 @@ enum MapPinMarkerFactory {
             headPath.fill()
 
             UIColor.white.setStroke()
-            headPath.lineWidth = 2
+            headPath.lineWidth = isSelected ? 3 : 2
             headPath.stroke()
 
             let pointPath = UIBezierPath()
-            pointPath.move(to: CGPoint(x: size.width / 2, y: size.height - 1))
+            pointPath.move(to: CGPoint(x: markerSize.width / 2, y: markerSize.height - 1))
             pointPath.addLine(to: CGPoint(x: 14, y: 36))
             pointPath.addLine(to: CGPoint(x: 30, y: 36))
             pointPath.close()
@@ -90,7 +98,7 @@ enum MapPinMarkerFactory {
             let text = glyph as NSString
             let textSize = text.size(withAttributes: attributes)
             let textRect = CGRect(
-                x: (size.width - textSize.width) / 2,
+                x: (markerSize.width - textSize.width) / 2,
                 y: 12,
                 width: textSize.width,
                 height: textSize.height
