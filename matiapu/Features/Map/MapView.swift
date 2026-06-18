@@ -15,6 +15,7 @@ struct MapView: View {
             if isMapReady {
                 GoogleMapView(
                     posts: viewModel.posts,
+                    mapCenter: viewModel.mapCenter,
                     selectedPostID: viewModel.selectedPost?.id,
                     onMarkerTap: viewModel.selectPost,
                     onMapTap: viewModel.dismissSelectedPost
@@ -83,7 +84,7 @@ struct MapView: View {
         HStack(alignment: .center, spacing: AppSpacing.mapFilterSpacing) {
             filterButtons
 
-            CreatePostGlassButton(action: postViewModel.openCreatePost)
+            GlassFAB(systemImage: "plus", action: postViewModel.openCreatePost)
         }
         .padding(.top, AppSpacing.screenTop)
     }

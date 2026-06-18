@@ -3,11 +3,13 @@
 //  matiapu
 //
 
+import CoreLocation
 import GoogleMaps
 import SwiftUI
 
 struct GoogleMapView: View {
     let posts: [Post]
+    let mapCenter: CLLocationCoordinate2D
     let selectedPostID: String?
     let onMarkerTap: (Post) -> Void
     let onMapTap: () -> Void
@@ -16,6 +18,7 @@ struct GoogleMapView: View {
         if GoogleMapsConfigurator.isConfigured {
             GoogleMapViewRepresentable(
                 posts: posts,
+                mapCenter: mapCenter,
                 selectedPostID: selectedPostID,
                 onMarkerTap: onMarkerTap,
                 onMapTap: onMapTap
@@ -31,6 +34,7 @@ struct GoogleMapView: View {
 
 private struct GoogleMapViewRepresentable: UIViewRepresentable {
     let posts: [Post]
+    let mapCenter: CLLocationCoordinate2D
     let selectedPostID: String?
     let onMarkerTap: (Post) -> Void
     let onMapTap: () -> Void
@@ -42,18 +46,20 @@ private struct GoogleMapViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> GMSMapView {
         let options = GMSMapViewOptions()
         options.camera = GMSCameraPosition.camera(
-            withTarget: MapConstants.defaultCenter,
+            withTarget: mapCenter,
             zoom: MapConstants.defaultZoom
         )
         let mapView = GMSMapView(options: options)
         mapView.settings.compassButton = true
         mapView.delegate = context.coordinator
+        context.coordinator.lastMapCenter = mapCenter
         context.coordinator.updateMarkers(on: mapView, posts: posts, selectedPostID: selectedPostID)
         return mapView
     }
 
     func updateUIView(_ mapView: GMSMapView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.updateCameraIfNeeded(on: mapView, center: mapCenter)
         context.coordinator.updateMarkers(on: mapView, posts: posts, selectedPostID: selectedPostID)
     }
 
@@ -62,9 +68,25 @@ private struct GoogleMapViewRepresentable: UIViewRepresentable {
         private var markers: [GMSMarker] = []
         private var displayedPostIDs: [String] = []
         private var displayedSelectedPostID: String?
+        fileprivate var lastMapCenter: CLLocationCoordinate2D?
 
         init(parent: GoogleMapViewRepresentable) {
             self.parent = parent
+        }
+
+        func updateCameraIfNeeded(on mapView: GMSMapView, center: CLLocationCoordinate2D) {
+            if let lastMapCenter,
+               abs(lastMapCenter.latitude - center.latitude) < 0.000001,
+               abs(lastMapCenter.longitude - center.longitude) < 0.000001 {
+                return
+            }
+
+            lastMapCenter = center
+            let camera = GMSCameraPosition.camera(
+                withTarget: center,
+                zoom: MapConstants.defaultZoom
+            )
+            mapView.animate(to: camera)
         }
 
         func updateMarkers(on mapView: GMSMapView, posts: [Post], selectedPostID: String?) {
