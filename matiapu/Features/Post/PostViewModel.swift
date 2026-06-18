@@ -23,10 +23,16 @@ final class PostViewModel {
 
     private var swipeQueue = PostSwipeQueue()
     private let postRepository: any PostRepository
+    private let matchRepository: any MatchRepository
     private var locationCaptureService: LocationCaptureService?
 
-    init(postRepository: any PostRepository, initialQueue: [Post]? = nil) {
+    init(
+        postRepository: any PostRepository,
+        matchRepository: any MatchRepository,
+        initialQueue: [Post]? = nil
+    ) {
         self.postRepository = postRepository
+        self.matchRepository = matchRepository
         if let initialQueue {
             swipeQueue = PostSwipeQueue(candidates: initialQueue)
             post = swipeQueue.current
@@ -50,6 +56,12 @@ final class PostViewModel {
         if swipeQueue.advance(with: action) != nil {
             Task {
                 try? await postRepository.recordSwipe(postId: current.id, action: action)
+                if action == .empathy {
+                    _ = try? await matchRepository.recordLegislatorLike(
+                        legislatorId: MockMatching.demoLegislatorId,
+                        post: current
+                    )
+                }
             }
         }
         post = swipeQueue.current
@@ -128,6 +140,7 @@ extension PostViewModel {
     static var preview: PostViewModel {
         PostViewModel(
             postRepository: MockPostRepository(),
+            matchRepository: MockMatchRepository(chatRepository: MockChatRepository()),
             initialQueue: PostPreviewData.feedCandidates
         )
     }

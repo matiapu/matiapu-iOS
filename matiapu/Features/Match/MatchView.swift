@@ -37,6 +37,18 @@ struct MatchView: View {
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(AppRadius.postDetailSheet)
         }
+        .alert("マッチしました！", isPresented: $viewModel.showMatchAlert) {
+            Button("チャットを開く") {
+                viewModel.openChatAfterMatch()
+            }
+            Button("閉じる", role: .cancel) {
+                viewModel.dismissMatchAlert()
+            }
+        } message: {
+            if let name = viewModel.matchedPartnerName {
+                Text("\(name)さんとマッチしました。チャットでメッセージを送れます。")
+            }
+        }
     }
 
     private var chatPresentation: Binding<Bool> {

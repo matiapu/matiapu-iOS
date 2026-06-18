@@ -10,11 +10,17 @@ struct AppDependencies {
     let authRepository: any AuthRepository
     let notificationRepository: any NotificationRepository
     let chatRepository: any ChatRepository
+    let matchRepository: any MatchRepository
 
-    static let live = AppDependencies(
-        postRepository: MockPostRepository(),
-        authRepository: MockAuthRepository(),
-        notificationRepository: MockNotificationRepository(),
-        chatRepository: MockChatRepository()
-    )
+    static let live: AppDependencies = {
+        let chatRepository = MockChatRepository()
+        let matchRepository = MockMatchRepository(chatRepository: chatRepository)
+        return AppDependencies(
+            postRepository: MockPostRepository(),
+            authRepository: MockAuthRepository(),
+            notificationRepository: MockNotificationRepository(),
+            chatRepository: chatRepository,
+            matchRepository: matchRepository
+        )
+    }()
 }

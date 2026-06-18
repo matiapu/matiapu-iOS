@@ -23,11 +23,25 @@ final class AppViewModels {
             postRepository: postRepository
         )
 
+        let chatViewModel = ChatViewModel(chatRepository: dependencies.chatRepository)
+
         map = MapViewModel(postRepository: postRepository)
-        post = PostViewModel(postRepository: postRepository)
-        match = MatchViewModel(postRepository: postRepository)
+        post = PostViewModel(
+            postRepository: postRepository,
+            matchRepository: dependencies.matchRepository
+        )
+        match = MatchViewModel(
+            postRepository: postRepository,
+            matchRepository: dependencies.matchRepository,
+            authRepository: dependencies.authRepository
+        )
         profile = profileViewModel
-        chat = ChatViewModel(chatRepository: dependencies.chatRepository)
+        chat = chatViewModel
+
+        match.onMatched = { [weak chatViewModel] conversation in
+            await chatViewModel?.loadConversations()
+            _ = conversation
+        }
 
         Task {
             await map.loadInitialCenter(from: dependencies.authRepository)
