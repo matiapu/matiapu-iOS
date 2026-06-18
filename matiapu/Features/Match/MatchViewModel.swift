@@ -11,6 +11,7 @@ import Observation
 final class MatchViewModel {
     private(set) var currentPost: Post?
     var detailPost: Post?
+    var isChatPresented = false
     private(set) var isLoading = false
 
     private var swipeQueue = PostSwipeQueue()
@@ -39,6 +40,14 @@ final class MatchViewModel {
 
     func openDetail() {
         detailPost = currentPost
+    }
+
+    func openChat() {
+        isChatPresented = true
+    }
+
+    func dismissChat() {
+        isChatPresented = false
     }
 
     func handleSwipe(_ action: PostSwipeAction) {

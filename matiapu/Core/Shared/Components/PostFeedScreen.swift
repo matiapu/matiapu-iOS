@@ -74,27 +74,38 @@ extension PostFeedScreen where Overlay == EmptyView {
     }
 }
 
-struct CreatePostGlassButton: View {
+struct CreatePostFAB: View {
+    let action: () -> Void
+
+    var body: some View {
+        GlassFAB(systemImage: "plus", action: action)
+            .padding(.trailing, AppSpacing.fabTrailing)
+            .padding(.top, AppSpacing.screenTop)
+    }
+}
+
+struct ChatFAB: View {
+    let action: () -> Void
+
+    var body: some View {
+        GlassFAB(systemImage: "bubble.left.and.bubble.right.fill", action: action)
+            .padding(.trailing, AppSpacing.fabTrailing)
+            .padding(.top, AppSpacing.screenTop)
+    }
+}
+
+struct GlassFAB: View {
+    let systemImage: String
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "plus")
+            Image(systemName: systemImage)
                 .font(AppTypography.fabIcon)
                 .frame(width: AppSize.fab, height: AppSize.fab)
         }
         .buttonStyle(.glass)
         .buttonBorderShape(.circle)
-    }
-}
-
-struct CreatePostFAB: View {
-    let action: () -> Void
-
-    var body: some View {
-        CreatePostGlassButton(action: action)
-            .padding(.trailing, AppSpacing.fabTrailing)
-            .padding(.top, AppSpacing.screenTop)
     }
 }
 

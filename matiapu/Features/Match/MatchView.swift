@@ -7,6 +7,7 @@ import SwiftUI
 
 struct MatchView: View {
     @Bindable var viewModel: MatchViewModel
+    @Bindable var chatViewModel: ChatViewModel
 
     var body: some View {
         PostFeedScreen(
@@ -14,10 +15,21 @@ struct MatchView: View {
             display: .match,
             isLoading: viewModel.isLoading,
             onSeeMore: viewModel.openDetail,
-            onSwipe: viewModel.handleSwipe
+            onSwipe: viewModel.handleSwipe,
+            overlay: {
+                ChatFAB(action: viewModel.openChat)
+            }
         )
         .task {
             await viewModel.loadPosts()
+        }
+        .sheet(isPresented: chatPresentation) {
+            NavigationStack {
+                ChatView(viewModel: chatViewModel)
+            }
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(AppRadius.postDetailSheet)
         }
         .sheet(item: $viewModel.detailPost) { post in
             PostDetailView(post: post, display: .matchDetail)
@@ -26,8 +38,22 @@ struct MatchView: View {
                 .presentationCornerRadius(AppRadius.postDetailSheet)
         }
     }
+
+    private var chatPresentation: Binding<Bool> {
+        Binding(
+            get: { viewModel.isChatPresented },
+            set: { isPresented in
+                if !isPresented {
+                    viewModel.dismissChat()
+                }
+            }
+        )
+    }
 }
 
 #Preview {
-    MatchView(viewModel: .preview)
+    MatchView(
+        viewModel: .preview,
+        chatViewModel: .preview
+    )
 }

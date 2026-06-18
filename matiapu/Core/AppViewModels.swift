@@ -14,6 +14,7 @@ final class AppViewModels {
     let post: PostViewModel
     let match: MatchViewModel
     let profile: ProfileViewModel
+    let chat: ChatViewModel
 
     init(dependencies: AppDependencies) {
         let postRepository = dependencies.postRepository
@@ -26,6 +27,7 @@ final class AppViewModels {
         post = PostViewModel(postRepository: postRepository)
         match = MatchViewModel(postRepository: postRepository)
         profile = profileViewModel
+        chat = ChatViewModel(chatRepository: dependencies.chatRepository)
 
         Task {
             await map.loadInitialCenter(from: dependencies.authRepository)
