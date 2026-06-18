@@ -18,6 +18,10 @@ struct Post: Identifiable, Hashable {
     /// ユーザーが実際に撮影・投稿した写真の画像データ。
     let imageData: Data?
     let location: PostLocation?
+    /// 投稿した市民のユーザーID
+    let authorUserId: String?
+    /// 議員カード（Match画面）の議員ID
+    let legislatorId: String?
 
     init(
         id: String,
@@ -28,7 +32,9 @@ struct Post: Identifiable, Hashable {
         postedAt: Date,
         imageName: String? = nil,
         imageData: Data? = nil,
-        location: PostLocation?
+        location: PostLocation?,
+        authorUserId: String? = nil,
+        legislatorId: String? = nil
     ) {
         self.id = id
         self.authorName = authorName
@@ -39,6 +45,8 @@ struct Post: Identifiable, Hashable {
         self.imageName = imageName
         self.imageData = imageData
         self.location = location
+        self.authorUserId = authorUserId
+        self.legislatorId = legislatorId
     }
 
     var formattedDate: String {

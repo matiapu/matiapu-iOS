@@ -14,7 +14,8 @@ enum PostPreviewData {
         body: String(repeating: "本文", count: 30),
         postedAt: DateComponents(calendar: .current, year: 2026, month: 5, day: 19).date ?? .now,
         imageName: MockImages.postImage(at: 0),
-        location: nil
+        location: nil,
+        authorUserId: MockMatching.demoCitizenId
     )
 
     static let match = Post(
@@ -25,11 +26,11 @@ enum PostPreviewData {
         body: String(repeating: "本文", count: 30),
         postedAt: DateComponents(calendar: .current, year: 2026, month: 5, day: 19).date ?? .now,
         imageName: MockImages.postImage(at: 1),
-        location: nil
+        location: nil,
+        legislatorId: "leg-1"
     )
 
     static let matchCandidates: [Post] = [
-        match,
         Post(
             id: "preview-match-2",
             authorName: "田中 太郎",
@@ -38,8 +39,10 @@ enum PostPreviewData {
             body: "地域の歩道の老朽化が進んでいます。安全な通行のため、段階的な整備計画を提案します。",
             postedAt: DateComponents(calendar: .current, year: 2026, month: 4, day: 12).date ?? .now,
             imageName: MockImages.postImage(at: 2),
-            location: nil
+            location: nil,
+            legislatorId: MockMatching.demoLegislatorId
         ),
+        match,
         Post(
             id: "preview-match-3",
             authorName: "佐藤 花子",
@@ -48,7 +51,8 @@ enum PostPreviewData {
             body: "空き店舗の活用とイベント開催により、にぎわいのある商店街を目指します。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 3),
-            location: nil
+            location: nil,
+            legislatorId: "leg-3"
         ),
         Post(
             id: "preview-match-4",
@@ -58,7 +62,8 @@ enum PostPreviewData {
             body: "住民からの声を反映し、犯罪抑止のため防犯カメラの設置を拡大します。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 4),
-            location: nil
+            location: nil,
+            legislatorId: "leg-4"
         ),
     ]
 
@@ -72,7 +77,8 @@ enum PostPreviewData {
             body: "ブランコのチェーンが錆びていて危ないです。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 5),
-            location: nil
+            location: nil,
+            authorUserId: "citizen-2"
         ),
         Post(
             id: "preview-feed-3",
@@ -261,4 +267,6 @@ enum PostPreviewData {
             location: PostLocation(latitude: 35.686800, longitude: 139.710200)
         ),
     ]
+
+    static let likedPosts: [Post] = Array(feedCandidates.prefix(12))
 }

@@ -23,6 +23,7 @@ protocol PostRepository: Sendable {
     func fetchFeaturedPost() async throws -> Post?
     func fetchFeedPosts() async throws -> [Post]
     func fetchUserPosts() async throws -> [Post]
+    func fetchLikedPosts() async throws -> [Post]
     func recordSwipe(postId: String, action: PostSwipeAction) async throws
     func createPost(
         title: String,
@@ -64,6 +65,10 @@ final class MockPostRepository: PostRepository, @unchecked Sendable {
             .sorted { $0.postedAt > $1.postedAt }
     }
 
+    func fetchLikedPosts() async throws -> [Post] {
+        PostPreviewData.likedPosts
+    }
+
     func recordSwipe(postId: String, action: PostSwipeAction) async throws {}
 
     func createPost(
@@ -86,7 +91,8 @@ final class MockPostRepository: PostRepository, @unchecked Sendable {
             postedAt: .now,
             imageName: nil,
             imageData: imageData,
-            location: location
+            location: location,
+            authorUserId: MockMatching.demoCitizenId
         )
 
         locked {
