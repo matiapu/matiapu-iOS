@@ -37,4 +37,15 @@ enum AppTypography {
     static let profileArea = Font.system(size: 16, weight: .medium)
     static let profileName = Font.system(size: 22, weight: .bold)
     static let profileSettingsIcon = Font.system(size: 22, weight: .semibold)
+
+    // MARK: - Settings
+
+    static let settingsMenuTitle = Font.system(size: 16, weight: .medium)
+    static let settingsCardTitle = Font.system(size: 16, weight: .medium)
+    static let settingsRegionStatus = Font.system(size: 16, weight: .medium)
+    static let settingsSortButton = Font.system(size: 13, weight: .bold)
+    static let settingsSearch = Font.system(size: 16)
+    static let settingsHeaderTitle = Font.system(size: 18, weight: .bold)
+    static let settingsEditField = Font.system(size: 16)
+    static let settingsEditLabel = Font.system(size: 16, weight: .semibold)
 }

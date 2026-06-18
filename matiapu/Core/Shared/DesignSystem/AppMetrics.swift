@@ -59,6 +59,21 @@ enum AppSpacing {
     static let profileGridLoadingVertical: CGFloat = 40
     static let profileGridSpacing: CGFloat = 1
     static let profileTabBarInset: CGFloat = 96
+
+    // settings
+    static let settingsHorizontal: CGFloat = 16
+    static let settingsCardSpacing: CGFloat = 16
+    static let settingsContentTop: CGFloat = 24
+    static let settingsAvatarTop: CGFloat = 40
+    static let settingsSectionSpacing: CGFloat = 20
+    static let settingsMenuRowVertical: CGFloat = 24
+    static let settingsProfileCardPadding: CGFloat = 20
+    static let settingsProfileCardSpacing: CGFloat = 16
+    static let settingsListItemSpacing: CGFloat = 4
+    static let settingsTabBarInset: CGFloat = 96
+    static let settingsHeaderCardPadding: CGFloat = 24
+    static let settingsSortButtonHorizontal: CGFloat = 12
+    static let settingsSortButtonVertical: CGFloat = 6
 }
 
 enum AppRadius {
@@ -67,6 +82,9 @@ enum AppRadius {
     static let createPostBodyField: CGFloat = 24
     static let postDetailSheet: CGFloat = 20
     static let mapCallout: CGFloat = 16
+    static let settingsCard: CGFloat = 28
+    static let settingsSearchBar: CGFloat = 24
+    static let settingsSortButton: CGFloat = 8
 }
 
 enum AppSize {
@@ -83,4 +101,9 @@ enum AppSize {
     static let profileGridColumns: Int = 3
     static let profileAvatar: CGFloat = 100
     static let profileSettingsButton: CGFloat = 44
+    static let settingsAvatar: CGFloat = 120
+    static let settingsProfileCardAvatar: CGFloat = 56
+    static let settingsMenuRowMinHeight: CGFloat = 64
+    static let settingsSearchBarHeight: CGFloat = 44
+    static let settingsRegionStatusCardHeight: CGFloat = 64
 }

@@ -47,6 +47,15 @@ enum AppColors {
 
     static let mapFilterUnselected = Color.white.opacity(0.78)
 
+    // MARK: - Settings
+
+    static let settingsCardBackground = Color.white
+    static let settingsCardText = Color.black
+    static let settingsChevron = Color.gray
+    static let settingsProfileAvatarPlaceholder = Color(red: 0.78, green: 0.78, blue: 0.78)
+    static let settingsSortButtonBackground = postTag
+    static let settingsSearchPlaceholder = Color.gray.opacity(0.45)
+
     // MARK: - Semantic
 
     static let onImageText = Color.white
