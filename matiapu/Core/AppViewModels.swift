@@ -27,6 +27,10 @@ final class AppViewModels {
         match = MatchViewModel(postRepository: postRepository)
         profile = profileViewModel
 
+        Task {
+            await map.loadInitialCenter(from: dependencies.authRepository)
+        }
+
         post.onPostCreated = { [weak map] in
             await map?.loadPosts()
             await profileViewModel.loadProfile()

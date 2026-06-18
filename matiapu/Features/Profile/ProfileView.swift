@@ -7,7 +7,10 @@ import SwiftUI
 
 struct ProfileView: View {
     @Bindable var viewModel: ProfileViewModel
+    @Bindable var mapViewModel: MapViewModel
+    let dependencies: AppDependencies
     @State private var selectedPost: Post?
+    @State private var showsSettings = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -43,6 +46,11 @@ struct ProfileView: View {
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(AppRadius.postDetailSheet)
         }
+        .fullScreenCover(isPresented: $showsSettings, onDismiss: {
+            Task { await viewModel.loadProfile() }
+        }) {
+            SettingsFlowView(dependencies: dependencies, mapViewModel: mapViewModel)
+        }
     }
 
     private func headerSection(width: CGFloat, height: CGFloat) -> some View {
@@ -71,7 +79,9 @@ struct ProfileView: View {
             }
             .frame(width: width, height: height)
 
-            Button(action: {}) {
+            Button {
+                showsSettings = true
+            } label: {
                 Image(systemName: "gearshape.fill")
                     .font(AppTypography.profileSettingsIcon)
                     .foregroundStyle(AppColors.onImageText)
@@ -134,5 +144,9 @@ struct ProfileView: View {
 }
 
 #Preview {
-    ProfileView(viewModel: .preview)
+    ProfileView(
+        viewModel: .preview,
+        mapViewModel: MapViewModel(postRepository: MockPostRepository()),
+        dependencies: .live
+    )
 }

@@ -9,13 +9,15 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var viewModels: AppViewModels
+    private let dependencies: AppDependencies
 
     init(dependencies: AppDependencies) {
+        self.dependencies = dependencies
         _viewModels = State(wrappedValue: AppViewModels(dependencies: dependencies))
     }
 
     var body: some View {
-        MainTabView(viewModels: viewModels)
+        MainTabView(viewModels: viewModels, dependencies: dependencies)
     }
 }
 

@@ -7,6 +7,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @Bindable var viewModels: AppViewModels
+    let dependencies: AppDependencies
 
     var body: some View {
         TabView {
@@ -20,12 +21,16 @@ struct MainTabView: View {
                     Label("post", systemImage: "person.line.dotted.person.fill")
                 }
 
-            MatchView(viewModel: viewModels.match)
+            MatchView(viewModel: viewModels.match, chatViewModel: viewModels.chat)
                 .tabItem {
                     Label("match", systemImage: "figure.walk.suitcase.rolling")
                 }
 
-            ProfileView(viewModel: viewModels.profile)
+            ProfileView(
+                viewModel: viewModels.profile,
+                mapViewModel: viewModels.map,
+                dependencies: dependencies
+            )
                 .tabItem {
                     Label("account", systemImage: "person.fill")
                 }
@@ -51,5 +56,5 @@ struct MainTabView: View {
 }
 
 #Preview {
-    MainTabView(viewModels: AppViewModels(dependencies: .live))
+    MainTabView(viewModels: AppViewModels(dependencies: .live), dependencies: .live)
 }
