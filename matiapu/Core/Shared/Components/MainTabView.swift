@@ -8,6 +8,7 @@ import SwiftUI
 struct MainTabView: View {
     @Bindable var viewModels: AppViewModels
     let dependencies: AppDependencies
+    var onSignOut: () -> Void = {}
 
     var body: some View {
         TabView {
@@ -29,7 +30,8 @@ struct MainTabView: View {
             ProfileView(
                 viewModel: viewModels.profile,
                 mapViewModel: viewModels.map,
-                dependencies: dependencies
+                dependencies: dependencies,
+                onSignOut: onSignOut
             )
                 .tabItem {
                     Label("account", systemImage: "person.fill")

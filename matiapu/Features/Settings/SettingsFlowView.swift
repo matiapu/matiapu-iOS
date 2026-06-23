@@ -11,8 +11,13 @@ struct SettingsFlowView: View {
   @State private var notificationsViewModel: NotificationsViewModel
   @State private var navigationPath = NavigationPath()
   @Environment(\.dismiss) private var dismiss
+  let onSignOut: () -> Void
 
-  init(dependencies: AppDependencies, mapViewModel: MapViewModel) {
+  init(
+    dependencies: AppDependencies,
+    mapViewModel: MapViewModel,
+    onSignOut: @escaping () -> Void = {}
+  ) {
     let settingsViewModel = SettingsViewModel(
       authRepository: dependencies.authRepository,
       notificationRepository: dependencies.notificationRepository
@@ -29,11 +34,12 @@ struct SettingsFlowView: View {
         notificationRepository: dependencies.notificationRepository
       )
     )
+    self.onSignOut = onSignOut
   }
 
   var body: some View {
     NavigationStack(path: $navigationPath) {
-      SettingsView(viewModel: settingsViewModel)
+      SettingsView(viewModel: settingsViewModel, onSignOut: onSignOut)
         .navigationDestination(for: SettingsDestination.self) { destination in
           destinationView(for: destination)
         }

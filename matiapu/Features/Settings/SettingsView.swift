@@ -7,6 +7,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
+    var onSignOut: () -> Void = {}
 
     var body: some View {
         SettingsScreenLayout {
@@ -32,6 +33,11 @@ struct SettingsView: View {
 
                     NavigationLink(value: SettingsDestination.notifications) {
                         notificationsRow
+                    }
+                    .buttonStyle(.plain)
+
+                    Button(action: onSignOut) {
+                        SettingsMenuRow(title: "ログアウト", showsChevron: false)
                     }
                     .buttonStyle(.plain)
                 }

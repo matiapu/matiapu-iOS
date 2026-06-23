@@ -9,6 +9,7 @@ struct ProfileView: View {
     @Bindable var viewModel: ProfileViewModel
     @Bindable var mapViewModel: MapViewModel
     let dependencies: AppDependencies
+    var onSignOut: () -> Void = {}
     @State private var selectedPost: Post?
     @State private var showsSettings = false
 
@@ -49,7 +50,14 @@ struct ProfileView: View {
         .fullScreenCover(isPresented: $showsSettings, onDismiss: {
             Task { await viewModel.loadProfile() }
         }) {
-            SettingsFlowView(dependencies: dependencies, mapViewModel: mapViewModel)
+            SettingsFlowView(
+                dependencies: dependencies,
+                mapViewModel: mapViewModel,
+                onSignOut: {
+                    showsSettings = false
+                    onSignOut()
+                }
+            )
         }
     }
 
