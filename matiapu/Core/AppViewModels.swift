@@ -28,7 +28,8 @@ final class AppViewModels {
         map = MapViewModel(postRepository: postRepository)
         post = PostViewModel(
             postRepository: postRepository,
-            matchRepository: dependencies.matchRepository
+            matchRepository: dependencies.matchRepository,
+            authRepository: dependencies.authRepository
         )
         match = MatchViewModel(
             postRepository: postRepository,
