@@ -17,6 +17,8 @@ struct Post: Identifiable, Hashable {
     let imageName: String?
     /// ユーザーが実際に撮影・投稿した写真の画像データ。
     let imageData: Data?
+    /// Firebase Storage 上の画像 URL。
+    let imageURL: String?
     let location: PostLocation?
     /// 投稿した市民のユーザーID
     let authorUserId: String?
@@ -32,6 +34,7 @@ struct Post: Identifiable, Hashable {
         postedAt: Date,
         imageName: String? = nil,
         imageData: Data? = nil,
+        imageURL: String? = nil,
         location: PostLocation?,
         authorUserId: String? = nil,
         legislatorId: String? = nil
@@ -44,6 +47,7 @@ struct Post: Identifiable, Hashable {
         self.postedAt = postedAt
         self.imageName = imageName
         self.imageData = imageData
+        self.imageURL = imageURL
         self.location = location
         self.authorUserId = authorUserId
         self.legislatorId = legislatorId

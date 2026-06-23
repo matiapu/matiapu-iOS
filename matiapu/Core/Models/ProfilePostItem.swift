@@ -8,6 +8,13 @@ import Foundation
 struct ProfilePostItem: Identifiable, Hashable {
     let id: String
     let imageName: String
+    let imageURL: String?
+
+    init(id: String, imageName: String, imageURL: String? = nil) {
+        self.id = id
+        self.imageName = imageName
+        self.imageURL = imageURL
+    }
 }
 
 #if DEBUG
