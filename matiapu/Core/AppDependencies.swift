@@ -11,16 +11,59 @@ struct AppDependencies {
     let notificationRepository: any NotificationRepository
     let chatRepository: any ChatRepository
     let matchRepository: any MatchRepository
+    let commentRepository: any CommentRepository
+    let shelterRepository: any ShelterRepository
+    let disasterRepository: any DisasterRepository
+    let qaRepository: any QARepository
 
     static let live: AppDependencies = {
+        if FirebaseBootstrap.isConfigured {
+            return makeFirebaseDependencies()
+        }
+        return makeMockDependencies()
+    }()
+
+    private static func makeFirebaseDependencies() -> AppDependencies {
+        let authRepository = FirebaseAuthRepository()
+        let likeService = FirestoreLikeService()
+        let chatService = FirestoreChatService()
+        let matchService = FirestoreMatchService(chatService: chatService)
+
+        return AppDependencies(
+            postRepository: FirebasePostRepository(
+                authRepository: authRepository,
+                likeService: likeService
+            ),
+            authRepository: authRepository,
+            notificationRepository: MockNotificationRepository(),
+            chatRepository: FirebaseChatRepository(
+                chatService: chatService,
+                authRepository: authRepository
+            ),
+            matchRepository: FirebaseMatchRepository(
+                matchService: matchService
+            ),
+            commentRepository: FirebaseCommentRepository(),
+            shelterRepository: FirebaseShelterRepository(),
+            disasterRepository: FirebaseDisasterRepository(),
+            qaRepository: FirebaseQARepository()
+        )
+    }
+
+    private static func makeMockDependencies() -> AppDependencies {
         let chatRepository = MockChatRepository()
         let matchRepository = MockMatchRepository(chatRepository: chatRepository)
+
         return AppDependencies(
             postRepository: MockPostRepository(),
             authRepository: MockAuthRepository(),
             notificationRepository: MockNotificationRepository(),
             chatRepository: chatRepository,
-            matchRepository: matchRepository
+            matchRepository: matchRepository,
+            commentRepository: UnavailableCommentRepository(),
+            shelterRepository: UnavailableShelterRepository(),
+            disasterRepository: UnavailableDisasterRepository(),
+            qaRepository: UnavailableQARepository()
         )
-    }()
+    }
 }
