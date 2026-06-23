@@ -74,6 +74,20 @@ enum AppSpacing {
     static let settingsHeaderCardPadding: CGFloat = 24
     static let settingsSortButtonHorizontal: CGFloat = 12
     static let settingsSortButtonVertical: CGFloat = 6
+
+    // auth
+    static let authHorizontal: CGFloat = 24
+    static let authCardPaddingLogin: CGFloat = 40
+    static let authCardPaddingSignUp: CGFloat = 24
+    static let authCardContentGap: CGFloat = 32
+    static let authSignUpCardContentGap: CGFloat = 48
+    static let authFieldSpacing: CGFloat = 20
+    static let authSectionSpacing: CGFloat = 24
+    static let authSocialSpacing: CGFloat = 12
+    static let authFooterTop: CGFloat = 32
+    static let authLoginContentTop: CGFloat = 48
+    static let authSignUpHeaderTop: CGFloat = 48
+    static let authInlineLinkTop: CGFloat = 24
 }
 
 enum AppRadius {
@@ -85,6 +99,8 @@ enum AppRadius {
     static let settingsCard: CGFloat = 28
     static let settingsSearchBar: CGFloat = 24
     static let settingsSortButton: CGFloat = 8
+    static let authCard: CGFloat = 32
+    static let authVerificationButton: CGFloat = 12
 }
 
 enum AppSize {
@@ -106,4 +122,8 @@ enum AppSize {
     static let settingsMenuRowMinHeight: CGFloat = 64
     static let settingsSearchBarHeight: CGFloat = 44
     static let settingsRegionStatusCardHeight: CGFloat = 64
+    static let authPrimaryButtonHeight: CGFloat = 52
+    static let authSocialButtonHeight: CGFloat = 48
+    static let authLogoSize: CGFloat = 96
+    static let authNavLogoSize: CGFloat = 32
 }

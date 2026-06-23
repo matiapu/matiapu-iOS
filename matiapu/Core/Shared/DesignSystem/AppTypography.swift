@@ -48,4 +48,21 @@ enum AppTypography {
     static let settingsHeaderTitle = Font.system(size: 18, weight: .bold)
     static let settingsEditField = Font.system(size: 16)
     static let settingsEditLabel = Font.system(size: 16, weight: .semibold)
+
+    // MARK: - Auth
+
+    static let authTitle = Font.system(size: 24, weight: .bold)
+    static let authSignUpTitle = Font.system(size: 20, weight: .bold)
+    static let authSubtitle = Font.system(size: 14)
+    static let authFieldLabel = Font.system(size: 12, weight: .semibold)
+    static let authField = Font.system(size: 16)
+    static let authPrimaryButton = Font.system(size: 16, weight: .bold)
+    static let authSocialButton = Font.system(size: 16, weight: .semibold)
+    static let authLink = Font.system(size: 14, weight: .semibold)
+    static let authFooter = Font.system(size: 10)
+    static let authBrandNav = Font.system(size: 24, weight: .bold)
+    static let authBrandTagline = Font.system(size: 12, weight: .semibold)
+    static let authGreeting = Font.system(size: 24, weight: .bold)
+    static let authBody = Font.system(size: 16)
+    static let authDividerLabel = Font.system(size: 10)
 }
