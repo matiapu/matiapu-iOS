@@ -15,9 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
-            FirebaseApp.configure()
-        }
+        FirebaseBootstrap.configureIfNeeded()
         GoogleMapsConfigurator.configureIfNeeded()
         return true
     }
@@ -26,11 +24,17 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 @main
 struct matiapuApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    private let dependencies = AppDependencies.live
+    private let dependencies: AppDependencies
+
+    init() {
+        FirebaseBootstrap.configureIfNeeded()
+        GoogleMapsConfigurator.configureIfNeeded()
+        dependencies = AppDependencies.live
+    }
 
     var body: some Scene {
         WindowGroup {
-            ContentView(dependencies: dependencies)
+            RootView(dependencies: dependencies)
         }
     }
 }
