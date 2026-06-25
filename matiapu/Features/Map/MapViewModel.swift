@@ -15,19 +15,47 @@ final class MapViewModel {
     private(set) var isLoading = false
     private(set) var errorMessage: String?
     private(set) var mapCenter: CLLocationCoordinate2D = MapConstants.defaultCenter
+    private(set) var userLocationAuthorizationStatus: CLAuthorizationStatus = .notDetermined
     var selectedPost: Post?
     var detailPost: Post?
 
     private let postRepository: any PostRepository
     private let coordinateResolver = RegionCoordinateResolver()
+    private var locationService: LocationCaptureService?
+    private var hasCenteredOnUserLocation = false
 
     init(postRepository: any PostRepository) {
         self.postRepository = postRepository
     }
 
     func loadInitialCenter(from authRepository: any AuthRepository) async {
+        await requestUserLocationAndCenter()
+
+        guard !hasCenteredOnUserLocation else { return }
         guard let profile = try? await authRepository.fetchCurrentUser() else { return }
         await updateCenter(forRegisteredArea: profile.registeredArea)
+    }
+
+    func requestUserLocationAndCenter() async {
+        let service = locationService ?? LocationCaptureService()
+        locationService = service
+        service.onLocationUpdate = { [weak self] location in
+            guard let self, !self.hasCenteredOnUserLocation else { return }
+            self.centerOnUserLocation(location.coordinate)
+        }
+        service.prepareForCapture()
+        userLocationAuthorizationStatus = service.authorizationStatus
+
+        if let coordinate = await service.waitForLocation(timeout: 8) {
+            centerOnUserLocation(coordinate)
+        }
+    }
+
+    func centerOnUserLocation(_ coordinate: CLLocationCoordinate2D? = nil) {
+        let target = coordinate ?? locationService?.currentCoordinate
+        guard let target else { return }
+        hasCenteredOnUserLocation = true
+        mapCenter = target
     }
 
     func updateCenter(forRegisteredArea area: String) async {
