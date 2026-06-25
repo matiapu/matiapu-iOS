@@ -110,14 +110,6 @@ private struct GoogleMapViewRepresentable: UIViewRepresentable {
                     return marker
                 }
                 displayedPostIDs = postIDs
-
-                if let firstLocation = mappablePosts.first?.location, mappablePosts.count == 1 {
-                    let camera = GMSCameraPosition.camera(
-                        withTarget: firstLocation.coordinate,
-                        zoom: MapConstants.focusedZoom
-                    )
-                    mapView.animate(to: camera)
-                }
             }
 
             if postsChanged || selectedPostID != displayedSelectedPostID {
