@@ -29,7 +29,6 @@ struct MainTabView: View {
 
             ProfileView(
                 viewModel: viewModels.profile,
-                mapViewModel: viewModels.map,
                 dependencies: dependencies,
                 onSignOut: onSignOut
             )

@@ -15,16 +15,12 @@ struct SettingsFlowView: View {
 
   init(
     dependencies: AppDependencies,
-    mapViewModel: MapViewModel,
     onSignOut: @escaping () -> Void = {}
   ) {
     let settingsViewModel = SettingsViewModel(
       authRepository: dependencies.authRepository,
       notificationRepository: dependencies.notificationRepository
     )
-    settingsViewModel.onRegisteredAreaUpdated = { area in
-      Task { await mapViewModel.updateCenter(forRegisteredArea: area) }
-    }
     _settingsViewModel = State(initialValue: settingsViewModel)
     _likedPostsViewModel = State(
       initialValue: LikedPostsViewModel(postRepository: dependencies.postRepository)
@@ -99,5 +95,5 @@ struct SettingsFlowView: View {
 }
 
 #Preview {
-  SettingsFlowView(dependencies: .live, mapViewModel: MapViewModel(postRepository: MockPostRepository()))
+  SettingsFlowView(dependencies: .live)
 }

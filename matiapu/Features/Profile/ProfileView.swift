@@ -7,7 +7,6 @@ import SwiftUI
 
 struct ProfileView: View {
     @Bindable var viewModel: ProfileViewModel
-    @Bindable var mapViewModel: MapViewModel
     let dependencies: AppDependencies
     var onSignOut: () -> Void = {}
     @State private var selectedPost: Post?
@@ -52,7 +51,6 @@ struct ProfileView: View {
         }) {
             SettingsFlowView(
                 dependencies: dependencies,
-                mapViewModel: mapViewModel,
                 onSignOut: {
                     showsSettings = false
                     onSignOut()
@@ -154,7 +152,6 @@ struct ProfileView: View {
 #Preview {
     ProfileView(
         viewModel: .preview,
-        mapViewModel: MapViewModel(postRepository: MockPostRepository()),
         dependencies: .live
     )
 }

@@ -16,8 +16,6 @@ final class SettingsViewModel {
     private let authRepository: any AuthRepository
     private let notificationRepository: any NotificationRepository
 
-    var onRegisteredAreaUpdated: ((String) -> Void)?
-
     init(
         authRepository: any AuthRepository,
         notificationRepository: any NotificationRepository
@@ -46,7 +44,6 @@ final class SettingsViewModel {
     func updateRegisteredArea(_ area: String) async throws {
         try await authRepository.updateRegisteredArea(area)
         await loadProfile()
-        onRegisteredAreaUpdated?(area)
     }
 
     func updateEmail(_ email: String) async throws {
