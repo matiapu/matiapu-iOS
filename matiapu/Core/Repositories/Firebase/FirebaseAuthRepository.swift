@@ -6,11 +6,11 @@
 import FirebaseAuth
 import FirebaseFirestore
 import Foundation
+import os
 
 final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
     private let db = Firestore.firestore()
-    private let lock = NSLock()
-    private var verificationDisplayName: String?
+    private let verificationDisplayName = OSAllocatedUnfairLock<String?>(initialState: nil)
 
     var isAuthenticated: Bool {
         guard let user = FirebaseAuthSession.currentUser else { return false }
@@ -18,9 +18,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
     }
 
     var pendingVerificationDisplayName: String? {
-        lock.lock()
-        defer { lock.unlock() }
-        return verificationDisplayName
+        verificationDisplayName.withLock { $0 }
     }
 
     func fetchCurrentUser() async throws -> UserProfile {
@@ -93,9 +91,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
 
     func signOut() async throws {
         try Auth.auth().signOut()
-        lock.lock()
-        verificationDisplayName = nil
-        lock.unlock()
+        verificationDisplayName.withLock { $0 = nil }
     }
 
     func signIn(email: String, password: String) async throws {
@@ -217,14 +213,10 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
     }
 
     private func storePendingVerification(displayName: String) {
-        lock.lock()
-        verificationDisplayName = displayName
-        lock.unlock()
+        verificationDisplayName.withLock { $0 = displayName }
     }
 
     private func clearPendingVerification() {
-        lock.lock()
-        verificationDisplayName = nil
-        lock.unlock()
+        verificationDisplayName.withLock { $0 = nil }
     }
 }
