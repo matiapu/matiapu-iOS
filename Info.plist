@@ -28,6 +28,6 @@
 	<key>NSCameraUsageDescription</key>
 	<string>投稿用の写真を撮影するためにカメラへのアクセスが必要です。</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>投稿の位置情報をマップのピンとして保存するために位置情報へのアクセスが必要です。</string>
+	<string>マップ上に現在地を表示し、投稿の位置情報を保存するために位置情報へのアクセスが必要です。</string>
 </dict>
 </plist>

@@ -65,7 +65,9 @@ struct MapView: View {
         }
         .task {
             isMapReady = true
-            await viewModel.loadPosts()
+            async let posts: Void = viewModel.loadPosts()
+            async let location: Void = viewModel.requestUserLocationAndCenter()
+            _ = await (posts, location)
         }
     }
 

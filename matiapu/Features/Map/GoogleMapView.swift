@@ -50,6 +50,8 @@ private struct GoogleMapViewRepresentable: UIViewRepresentable {
             zoom: MapConstants.defaultZoom
         )
         let mapView = GMSMapView(options: options)
+        mapView.isMyLocationEnabled = true
+        mapView.settings.myLocationButton = true
         mapView.settings.compassButton = true
         mapView.delegate = context.coordinator
         context.coordinator.lastMapCenter = mapCenter
