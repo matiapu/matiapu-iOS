@@ -5,6 +5,7 @@
 
 import AuthenticationServices
 import SwiftUI
+import UIKit
 
 struct AppleSignInButton: View {
     @Bindable var viewModel: AuthViewModel
@@ -115,10 +116,7 @@ private struct SignInWithAppleButtonViewRepresentable: UIViewRepresentable {
         }
 
         func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-            UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .flatMap(\.windows)
-                .first { $0.isKeyWindow } ?? ASPresentationAnchor()
+            UIApplication.shared.presentationAnchor
         }
     }
 }
