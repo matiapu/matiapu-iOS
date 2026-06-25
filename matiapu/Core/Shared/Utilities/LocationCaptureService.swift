@@ -11,6 +11,7 @@ final class LocationCaptureService: NSObject {
     private let manager = CLLocationManager()
     private(set) var latestLocation: CLLocation?
     private(set) var authorizationStatus: CLAuthorizationStatus
+    var onLocationUpdate: ((CLLocation) -> Void)?
 
     override init() {
         authorizationStatus = manager.authorizationStatus
@@ -78,6 +79,7 @@ extension LocationCaptureService: CLLocationManagerDelegate {
 
         Task { @MainActor in
             latestLocation = location
+            onLocationUpdate?(location)
         }
     }
 
