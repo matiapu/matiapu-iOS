@@ -33,6 +33,8 @@ fastlane/test_output/
 # Firebase — API キー等を含むためリポジトリに含めない
 GoogleService-Info.plist
 **/GoogleService-Info.plist
+firebase-debug.log
+firebase-debug.*.log
 
 # 証明書・プロビジョニング
 *.mobileprovision
