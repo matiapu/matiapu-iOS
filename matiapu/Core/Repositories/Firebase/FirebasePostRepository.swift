@@ -129,8 +129,8 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
     }
 
     private func fetchPublicPosts(limit: Int? = nil) async throws -> [Post] {
+        // status での絞り込みはマッパー側で行う。where + orderBy の複合インデックスを避けるため。
         var query: Query = db.collection(FirestoreCollections.posts)
-            .whereField(FirestoreFields.Post.status, isEqualTo: FirestorePostStatus.publicStatus)
             .order(by: FirestoreFields.Post.createdAt, descending: true)
 
         if let limit {
