@@ -50,7 +50,7 @@ final class MapViewModel {
             posts = try await postRepository.fetchPosts(filter: selectedFilter)
         } catch {
             posts = []
-            errorMessage = "位置情報の読み込みに失敗しました。ページを再度読み込んでください。"
+            errorMessage = "投稿データの読み込みに失敗しました。しばらくしてから再度お試しください。"
         }
     }
 
