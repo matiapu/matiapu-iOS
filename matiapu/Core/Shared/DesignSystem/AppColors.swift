@@ -70,7 +70,7 @@ enum AppColors {
     static let swipeStampSkipDown = Color(red: 0.98, green: 0.60, blue: 0.08)
     static let swipeStampIcon = Color.white
 
-    // MARK: - Auth (Figma: ログイン画面 / アカウント作成画面)
+    // MARK: - Auth
 
     static let authBackground = Color(red: 250 / 255, green: 249 / 255, blue: 255 / 255)
     static let authHeading = Color(red: 5 / 255, green: 26 / 255, blue: 62 / 255)
