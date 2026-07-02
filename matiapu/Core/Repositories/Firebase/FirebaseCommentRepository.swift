@@ -6,16 +6,6 @@
 import FirebaseFirestore
 import Foundation
 
-protocol CommentRepository: Sendable {
-    func createComment(_ input: CreateCommentInput) async throws -> Comment
-    func getComment(commentId: String) async throws -> Comment
-    func updateComment(commentId: String, contentText: String) async throws
-    func deleteComment(commentId: String) async throws
-    func getCommentsForPost(postId: String, options: CommentListOptions) async throws -> [Comment]
-    func getRepliesForComment(commentId: String) async throws -> [Comment]
-    func getThreadComments(rootCommentId: String) async throws -> [Comment]
-}
-
 final class FirebaseCommentRepository: CommentRepository, @unchecked Sendable {
     private let db = Firestore.firestore()
 
@@ -62,18 +52,17 @@ final class FirebaseCommentRepository: CommentRepository, @unchecked Sendable {
     func getCommentsForPost(postId: String, options: CommentListOptions) async throws -> [Comment] {
         var query: Query = db.collection(FirestoreCollections.comments)
             .whereField("post_id", isEqualTo: postId)
-            .order(by: "created_at", descending: true)
 
         if let limit = options.limit {
             query = query.limit(to: limit)
         }
 
         let snapshot = try await query.getDocuments()
-        let comments = snapshot.documents.compactMap { mapComment(id: $0.documentID, data: $0.data()) }
+        var comments = snapshot.documents.compactMap { mapComment(id: $0.documentID, data: $0.data()) }
         if options.rootOnly {
-            return comments.filter { $0.parentID == nil }
+            comments = comments.filter { $0.parentID == nil }
         }
-        return comments
+        return comments.sorted { $0.createdAt > $1.createdAt }
     }
 
     func getRepliesForComment(commentId: String) async throws -> [Comment] {
