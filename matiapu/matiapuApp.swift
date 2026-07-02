@@ -15,9 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        FirebaseBootstrap.configureIfNeeded()
-        GoogleMapsConfigurator.configureIfNeeded()
-        return true
+        true
     }
 }
 
@@ -29,6 +27,7 @@ struct matiapuApp: App {
     init() {
         FirebaseBootstrap.configureIfNeeded()
         GoogleMapsConfigurator.configureIfNeeded()
+        ChatCrypto.configure(chatSalt: AppSecrets.chatSalt)
         dependencies = AppDependencies.live
     }
 

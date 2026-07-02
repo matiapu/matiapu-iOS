@@ -17,6 +17,7 @@ enum FirestoreCollections {
     static let qaQuestions = "qa_questions"
     static let answers = "answers"
     static let matches = "matches"
+    static let announcements = "announcements"
 }
 
 enum FirestoreFields {
@@ -37,6 +38,11 @@ enum FirestoreFields {
         static let role = "role"
         static let createdAt = "createdAt"
         static let updatedAt = "updatedAt"
+        static let phoneNumber = "phoneNumber"
+        static let storeName = "storeName"
+        static let storeDescription = "storeDescription"
+        static let politicalParty = "politicalParty"
+        static let manifesto = "manifesto"
     }
 
     enum Post {
@@ -50,6 +56,7 @@ enum FirestoreFields {
         static let title = "title"
         static let tag = "tag"
         static let authorDisplayName = "author_display_name"
+        static let municipality = "municipality"
     }
 
     enum Like {
@@ -75,6 +82,7 @@ enum FirestoreFields {
         static let lastMessageAt = "last_message_at"
         static let lastMessageText = "last_message_text"
         static let lastMessageIV = "last_message_iv"
+        static let lastMessageSenderID = "last_message_sender_id"
     }
 
     enum ChatMessage {
@@ -84,6 +92,12 @@ enum FirestoreFields {
         static let iv = "iv"
         static let createdAt = "created_at"
         static let isSystem = "is_system"
+    }
+
+    enum Announcement {
+        static let title = "title"
+        static let body = "body"
+        static let publishedAt = "published_at"
     }
 }
 

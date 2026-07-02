@@ -5,6 +5,17 @@
 
 import Foundation
 
+enum ChatRepositoryError: LocalizedError {
+    case emptyMessage
+
+    var errorDescription: String? {
+        switch self {
+        case .emptyMessage:
+            return "メッセージを入力してください。"
+        }
+    }
+}
+
 protocol ChatRepository: Sendable {
     func fetchConversations() async throws -> [ChatConversation]
     func fetchMessages(conversationId: String) async throws -> [ChatMessage]

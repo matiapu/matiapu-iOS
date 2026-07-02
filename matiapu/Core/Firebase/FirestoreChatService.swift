@@ -18,11 +18,7 @@ final class FirestoreChatService: @unchecked Sendable {
             return roomID
         }
 
-        try await roomRef.setData([
-            FirestoreFields.ChatRoom.userIDs: [uid1, uid2].sorted(),
-            FirestoreFields.ChatRoom.createdAt: FirestoreDateCodec.timestamp(),
-            FirestoreFields.ChatRoom.lastMessageAt: FirestoreDateCodec.timestamp(),
-        ])
+        try await roomRef.setData(FirestoreChatRoomMapper.creationData(uid1: uid1, uid2: uid2))
         return roomID
     }
 
@@ -34,20 +30,23 @@ final class FirestoreChatService: @unchecked Sendable {
             .collection(FirestoreCollections.messages)
             .document()
 
-        try await messageRef.setData([
-            FirestoreFields.ChatMessage.senderID: "system",
-            FirestoreFields.ChatMessage.recipientID: "system",
-            FirestoreFields.ChatMessage.encryptedContent: encrypted.encryptedContent,
-            FirestoreFields.ChatMessage.iv: encrypted.iv,
-            FirestoreFields.ChatMessage.createdAt: FirestoreDateCodec.timestamp(),
-            FirestoreFields.ChatMessage.isSystem: true,
-        ])
+        try await messageRef.setData(
+            FirestoreChatMessageMapper.writeData(
+                senderID: "system",
+                recipientID: "system",
+                encryptedContent: encrypted.encryptedContent,
+                iv: encrypted.iv,
+                isSystem: true
+            )
+        )
 
-        try await db.collection(FirestoreCollections.chatRooms).document(roomID).updateData([
-            FirestoreFields.ChatRoom.lastMessageAt: FirestoreDateCodec.timestamp(),
-            FirestoreFields.ChatRoom.lastMessageText: encrypted.encryptedContent,
-            FirestoreFields.ChatRoom.lastMessageIV: encrypted.iv,
-        ])
+        try await db.collection(FirestoreCollections.chatRooms).document(roomID).updateData(
+            FirestoreChatRoomMapper.lastMessageUpdate(
+                encryptedContent: encrypted.encryptedContent,
+                iv: encrypted.iv,
+                senderID: "system"
+            )
+        )
     }
 
     func sendMessage(
@@ -64,20 +63,25 @@ final class FirestoreChatService: @unchecked Sendable {
             .document()
 
         let sentAt = Date.now
-        try await messageRef.setData([
-            FirestoreFields.ChatMessage.senderID: senderID,
-            FirestoreFields.ChatMessage.recipientID: recipientID,
-            FirestoreFields.ChatMessage.encryptedContent: encrypted.encryptedContent,
-            FirestoreFields.ChatMessage.iv: encrypted.iv,
-            FirestoreFields.ChatMessage.createdAt: FirestoreDateCodec.timestamp(from: sentAt),
-            FirestoreFields.ChatMessage.isSystem: false,
-        ])
+        try await messageRef.setData(
+            FirestoreChatMessageMapper.writeData(
+                senderID: senderID,
+                recipientID: recipientID,
+                encryptedContent: encrypted.encryptedContent,
+                iv: encrypted.iv,
+                sentAt: sentAt,
+                isSystem: false
+            )
+        )
 
-        try await db.collection(FirestoreCollections.chatRooms).document(roomID).updateData([
-            FirestoreFields.ChatRoom.lastMessageAt: FirestoreDateCodec.timestamp(from: sentAt),
-            FirestoreFields.ChatRoom.lastMessageText: encrypted.encryptedContent,
-            FirestoreFields.ChatRoom.lastMessageIV: encrypted.iv,
-        ])
+        try await db.collection(FirestoreCollections.chatRooms).document(roomID).updateData(
+            FirestoreChatRoomMapper.lastMessageUpdate(
+                encryptedContent: encrypted.encryptedContent,
+                iv: encrypted.iv,
+                senderID: senderID,
+                sentAt: sentAt
+            )
+        )
 
         return ChatMessage(
             id: messageRef.documentID,
@@ -88,25 +92,30 @@ final class FirestoreChatService: @unchecked Sendable {
         )
     }
 
-    func fetchRooms(for userID: String) async throws -> [QueryDocumentSnapshot] {
+    func fetchRooms(for userID: String) async throws -> [ChatRoom] {
         let snapshot = try await db.collection(FirestoreCollections.chatRooms)
             .whereField(FirestoreFields.ChatRoom.userIDs, arrayContains: userID)
-            .order(by: FirestoreFields.ChatRoom.lastMessageAt, descending: true)
             .getDocuments()
+
         return snapshot.documents
+            .compactMap(FirestoreChatRoomMapper.room(from:))
+            .sorted { $0.lastMessageAt > $1.lastMessageAt }
     }
 
-    func fetchMessages(roomID: String) async throws -> [ChatMessage] {
-        let uid = FirebaseAuthSession.currentUID
+    func fetchMessages(roomID: String, currentUID: String) async throws -> [ChatMessage] {
         let snapshot = try await db.collection(FirestoreCollections.chatRooms)
             .document(roomID)
             .collection(FirestoreCollections.messages)
-            .order(by: FirestoreFields.ChatMessage.createdAt, descending: false)
             .getDocuments()
 
-        return try snapshot.documents.compactMap { document in
-            try mapMessage(document: document, roomID: roomID, currentUID: uid)
+        let messages = snapshot.documents.compactMap { document in
+            FirestoreChatMessageMapper.message(
+                from: document,
+                roomID: roomID,
+                currentUID: currentUID
+            )
         }
+        return messages.sorted { $0.sentAt < $1.sentAt }
     }
 
     func existingRoomID(partnerID: String, currentUID: String) async throws -> String? {
@@ -131,78 +140,6 @@ final class FirestoreChatService: @unchecked Sendable {
             lastMessage: matchMessage,
             updatedAt: .now,
             unreadCount: 1
-        )
-    }
-
-    func mapConversation(
-        document: QueryDocumentSnapshot,
-        currentUID: String,
-        partnerNameResolver: (String) async throws -> String
-    ) async throws -> ChatConversation? {
-        let data = document.data()
-        guard let userIDs = data[FirestoreFields.ChatRoom.userIDs] as? [String] else {
-            return nil
-        }
-
-        let partnerID = userIDs.first { $0 != currentUID } ?? ""
-        guard !partnerID.isEmpty else { return nil }
-
-        let partnerName = try await partnerNameResolver(partnerID)
-        let updatedAt = FirestoreDateCodec.date(from: data[FirestoreFields.ChatRoom.lastMessageAt]) ?? .now
-
-        let lastMessage: String
-        if
-            let encrypted = data[FirestoreFields.ChatRoom.lastMessageText] as? String,
-            let iv = data[FirestoreFields.ChatRoom.lastMessageIV] as? String,
-            !encrypted.isEmpty,
-            !iv.isEmpty
-        {
-            lastMessage = (try? ChatCrypto.decrypt(
-                encryptedContent: encrypted,
-                iv: iv,
-                roomID: document.documentID
-            )) ?? "新しいメッセージ"
-        } else {
-            lastMessage = ""
-        }
-
-        return ChatConversation(
-            id: document.documentID,
-            partnerId: partnerID,
-            partnerName: partnerName,
-            lastMessage: lastMessage,
-            updatedAt: updatedAt,
-            unreadCount: 0
-        )
-    }
-
-    private func mapMessage(
-        document: QueryDocumentSnapshot,
-        roomID: String,
-        currentUID: String?
-    ) throws -> ChatMessage? {
-        let data = document.data()
-        guard
-            let encrypted = data[FirestoreFields.ChatMessage.encryptedContent] as? String,
-            let iv = data[FirestoreFields.ChatMessage.iv] as? String
-        else {
-            return nil
-        }
-
-        let text = try ChatCrypto.decrypt(
-            encryptedContent: encrypted,
-            iv: iv,
-            roomID: roomID
-        )
-        let senderID = data[FirestoreFields.ChatMessage.senderID] as? String ?? ""
-        let sentAt = FirestoreDateCodec.date(from: data[FirestoreFields.ChatMessage.createdAt]) ?? .now
-
-        return ChatMessage(
-            id: document.documentID,
-            conversationId: roomID,
-            text: text,
-            isFromCurrentUser: senderID == currentUID,
-            sentAt: sentAt
         )
     }
 }
