@@ -29,6 +29,8 @@ enum FirebaseAuthErrorMapper {
             return .wrongPassword
         case .networkError:
             return .unknown("ネットワークエラーが発生しました。")
+        case .requiresRecentLogin:
+            return .requiresRecentLogin
         default:
             return .unknown(error.localizedDescription)
         }

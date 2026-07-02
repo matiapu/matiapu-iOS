@@ -11,6 +11,7 @@ enum AuthPhase: Equatable {
     case loading
     case unauthenticated
     case needsEmailVerification(displayName: String)
+    case needsProfileRegistration(role: UserRole, needsAccountTypeSelection: Bool)
     case authenticated
 }
 
@@ -27,11 +28,13 @@ final class AuthViewModel {
     private(set) var isProcessing = false
     var errorMessage: String?
 
-    private let authRepository: any AuthRepository
+    private let authenticate: AuthenticateUseCase
+    private let manageAccount: ManageAccountUseCase
     private var authStateHandle: AuthStateDidChangeListenerHandle?
 
-    init(authRepository: any AuthRepository) {
-        self.authRepository = authRepository
+    init(useCases: AppUseCases) {
+        self.authenticate = useCases.authenticate
+        self.manageAccount = useCases.manageAccount
     }
 
     func start() {
@@ -56,28 +59,37 @@ final class AuthViewModel {
 
     func signIn(email: String, password: String) async {
         await perform {
-            try await authRepository.signIn(email: email, password: password)
+            try await authenticate.signIn(email: email, password: password)
         }
     }
 
-    func signUp(displayName: String, email: String, password: String) async {
+    func signUp(displayName: String, email: String, password: String, role: UserRole) async {
         await perform {
-            try await authRepository.signUp(displayName: displayName, email: email, password: password)
-            if let name = authRepository.pendingVerificationDisplayName {
+            try await authenticate.signUp(
+                displayName: displayName,
+                email: email,
+                password: password,
+                role: role
+            )
+            if let name = authenticate.pendingVerificationDisplayName {
                 phase = .needsEmailVerification(displayName: name)
             }
         }
     }
 
+    func markProfileRegistrationComplete() {
+        phase = .authenticated
+    }
+
     func signInWithGoogle() async {
         await perform {
-            try await authRepository.signInWithGoogle()
+            try await authenticate.signInWithGoogle()
         }
     }
 
     func signInWithApple(idToken: String, nonce: String, fullName: String?) async {
         await perform {
-            try await authRepository.signInWithApple(
+            try await authenticate.signInWithApple(
                 idToken: idToken,
                 nonce: nonce,
                 fullName: fullName
@@ -91,7 +103,7 @@ final class AuthViewModel {
         defer { isProcessing = false }
 
         do {
-            try await authRepository.sendPasswordReset(to: email)
+            try await manageAccount.sendPasswordReset(to: email)
             return true
         } catch let error as AuthError {
             errorMessage = error.errorDescription
@@ -104,7 +116,7 @@ final class AuthViewModel {
 
     func resendVerificationEmail() async {
         await perform {
-            try await authRepository.sendEmailVerification()
+            try await manageAccount.sendEmailVerification()
         }
     }
 
@@ -114,8 +126,12 @@ final class AuthViewModel {
         defer { isProcessing = false }
 
         do {
-            let verified = try await authRepository.reloadAndCheckEmailVerified()
-            refreshPhase(for: Auth.auth().currentUser)
+            let verified = try await manageAccount.reloadAndCheckEmailVerified()
+            if verified, let user = Auth.auth().currentUser {
+                await refreshProfileCompletionPhase(for: user)
+            } else {
+                refreshPhase(for: Auth.auth().currentUser)
+            }
             return verified
         } catch let error as AuthError {
             errorMessage = error.errorDescription
@@ -128,8 +144,23 @@ final class AuthViewModel {
 
     func signOut() async {
         errorMessage = nil
-        try? await authRepository.signOut()
+        try? await manageAccount.signOut()
         phase = .unauthenticated
+    }
+
+    func deleteAccount() async {
+        isProcessing = true
+        errorMessage = nil
+        defer { isProcessing = false }
+
+        do {
+            try await manageAccount.deleteAccount()
+            phase = .unauthenticated
+        } catch let error as AuthError {
+            errorMessage = error.errorDescription
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func refreshPhase(for user: User?) {
@@ -144,14 +175,38 @@ final class AuthViewModel {
         }
 
         if FirebaseAuthSession.needsEmailVerification(user: user) {
-            let displayName = authRepository.pendingVerificationDisplayName
+            let displayName = authenticate.pendingVerificationDisplayName
                 ?? user.displayName
                 ?? "ユーザー"
             phase = .needsEmailVerification(displayName: displayName)
             return
         }
 
-        phase = .authenticated
+        Task {
+            await refreshProfileCompletionPhase(for: user)
+        }
+    }
+
+    private func refreshProfileCompletionPhase(for user: User) async {
+        guard let profile = try? await manageAccount.fetchCurrentUser() else {
+            phase = .authenticated
+            return
+        }
+
+        guard !profile.isProfileCompleted else {
+            phase = .authenticated
+            return
+        }
+
+        let providers = user.providerData.map(\.providerID)
+        let isSocialProvider = providers.contains(where: {
+            $0 == "google.com" || $0 == "apple.com"
+        })
+
+        phase = .needsProfileRegistration(
+            role: profile.role,
+            needsAccountTypeSelection: isSocialProvider
+        )
     }
 
     private func perform(_ operation: () async throws -> Void) async {
@@ -164,7 +219,7 @@ final class AuthViewModel {
             refreshPhase(for: Auth.auth().currentUser)
         } catch let error as AuthError {
             if case .emailNotVerified = error,
-               let name = authRepository.pendingVerificationDisplayName {
+               let name = authenticate.pendingVerificationDisplayName {
                 phase = .needsEmailVerification(displayName: name)
                 return
             }
@@ -178,7 +233,7 @@ final class AuthViewModel {
 #if DEBUG
 extension AuthViewModel {
     static var preview: AuthViewModel {
-        let viewModel = AuthViewModel(authRepository: MockAuthRepository())
+        let viewModel = AuthViewModel(useCases: AppUseCases.make(from: .live))
         viewModel.phase = .unauthenticated
         return viewModel
     }

@@ -14,7 +14,7 @@ struct RootView: View {
 
     init(dependencies: AppDependencies) {
         self.dependencies = dependencies
-        _authViewModel = State(initialValue: AuthViewModel(authRepository: dependencies.authRepository))
+        _authViewModel = State(initialValue: AppViewModelFactory.auth(dependencies: dependencies))
     }
 
     var body: some View {
@@ -33,6 +33,13 @@ struct RootView: View {
                     EmailVerificationView(
                         viewModel: authViewModel,
                         displayName: displayName
+                    )
+                case .needsProfileRegistration(let role, let needsAccountTypeSelection):
+                    ProfileRegistrationFlowView(
+                        authViewModel: authViewModel,
+                        role: role,
+                        needsAccountTypeSelection: needsAccountTypeSelection,
+                        dependencies: dependencies
                     )
                 case .authenticated:
                     mainApp

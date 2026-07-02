@@ -13,6 +13,7 @@ enum AuthError: LocalizedError {
     case wrongPassword
     case emailNotVerified
     case notAuthenticated
+    case requiresRecentLogin
     case cancelled
     case unknown(String)
 
@@ -32,6 +33,8 @@ enum AuthError: LocalizedError {
             return "メールアドレスの認証が完了していません。"
         case .notAuthenticated:
             return "ログインが必要です。"
+        case .requiresRecentLogin:
+            return "セキュリティのため、一度ログアウトしてから再度ログインし、もう一度お試しください。"
         case .cancelled:
             return "認証がキャンセルされました。"
         case .unknown(let message):

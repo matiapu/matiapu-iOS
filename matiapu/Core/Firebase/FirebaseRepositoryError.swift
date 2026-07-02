@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum FirebaseRepositoryError: LocalizedError {
+enum FirebaseRepositoryError: LocalizedError, Equatable {
     case notConfigured
     case notAuthenticated
     case documentNotFound

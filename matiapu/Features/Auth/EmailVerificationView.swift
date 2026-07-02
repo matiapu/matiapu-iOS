@@ -29,7 +29,7 @@ struct EmailVerificationView: View {
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
 
-                            Text("登録したメールアドレスに届いた認証メールのリンクをタップしてください。リンクを開いたあと、この画面に戻ると自動的に認証が完了します。")
+                            Text("登録したメールアドレスに届いた認証メールのリンクをタップしてください。リンクはブラウザで開きます。認証後、この画面に戻って「認証状態を確認する」を押してください。届かない場合は迷惑メールフォルダもご確認ください。")
                                 .font(AppTypography.authBody)
                                 .foregroundStyle(AppColors.authSubtitle)
                                 .multilineTextAlignment(.center)

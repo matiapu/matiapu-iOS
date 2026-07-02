@@ -12,6 +12,7 @@ struct SignUpView: View {
     @State private var displayName = ""
     @State private var email = ""
     @State private var password = ""
+    @State private var selectedRole: UserRole = .citizen
     @State private var isPasswordVisible = false
 
     var body: some View {
@@ -31,6 +32,8 @@ struct SignUpView: View {
                         )
 
                         VStack(spacing: AppSpacing.authFieldSpacing) {
+                            accountTypeSection
+
                             AuthTextField(
                                 title: "お名前",
                                 text: $displayName,
@@ -75,7 +78,8 @@ struct SignUpView: View {
                                 await viewModel.signUp(
                                     displayName: displayName,
                                     email: email,
-                                    password: password
+                                    password: password,
+                                    role: selectedRole
                                 )
                             }
                         }
@@ -103,6 +107,36 @@ struct SignUpView: View {
                 .padding(.bottom, 48)
             }
             .scrollIndicators(.hidden)
+        }
+    }
+
+    private var accountTypeSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("アカウント種別")
+                .font(AppTypography.authFieldLabel)
+                .foregroundStyle(AppColors.authLabel)
+
+            HStack(spacing: 8) {
+                ForEach(UserRole.allCases) { role in
+                    Button {
+                        selectedRole = role
+                    } label: {
+                        Text(role.title)
+                            .font(.system(size: 14, weight: selectedRole == role ? .bold : .regular))
+                            .foregroundStyle(selectedRole == role ? .white : AppColors.authHeading)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(selectedRole == role ? AppColors.authPrimary : AppColors.authInputBackground)
+                            )
+                            .overlay(
+                                Capsule(style: .continuous)
+                                    .stroke(AppColors.authInputBorder, lineWidth: selectedRole == role ? 0 : 1)
+                            )
+                    }
+                }
+            }
         }
     }
 }
