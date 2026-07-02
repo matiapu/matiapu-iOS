@@ -8,6 +8,7 @@ import SwiftUI
 struct MatchView: View {
     @Bindable var viewModel: MatchViewModel
     @Bindable var chatViewModel: ChatViewModel
+    @Environment(\.appDependencies) private var dependencies
 
     var body: some View {
         PostFeedScreen(
@@ -32,10 +33,12 @@ struct MatchView: View {
             .presentationCornerRadius(AppRadius.postDetailSheet)
         }
         .sheet(item: $viewModel.detailPost) { post in
-            PostDetailView(post: post, display: .matchDetail)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(AppRadius.postDetailSheet)
+            if let dependencies {
+                PostDetailView(post: post, display: .matchDetail, dependencies: dependencies)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(AppRadius.postDetailSheet)
+            }
         }
         .alert("マッチしました！", isPresented: $viewModel.showMatchAlert) {
             Button("チャットを開く") {

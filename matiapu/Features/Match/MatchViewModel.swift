@@ -19,19 +19,12 @@ final class MatchViewModel {
     var onMatched: ((ChatConversation) async -> Void)?
 
     private var swipeQueue = PostSwipeQueue()
-    private let postRepository: any PostRepository
-    private let matchRepository: any MatchRepository
-    private let authRepository: any AuthRepository
+    private let fetchMatchCandidates: FetchMatchCandidatesUseCase
+    private let processMatchSwipe: ProcessMatchSwipeUseCase
 
-    init(
-        postRepository: any PostRepository,
-        matchRepository: any MatchRepository,
-        authRepository: any AuthRepository,
-        initialQueue: [Post]? = nil
-    ) {
-        self.postRepository = postRepository
-        self.matchRepository = matchRepository
-        self.authRepository = authRepository
+    init(useCases: AppUseCases, initialQueue: [Post]? = nil) {
+        self.fetchMatchCandidates = useCases.fetchMatchCandidates
+        self.processMatchSwipe = useCases.processMatchSwipe
         if let initialQueue {
             swipeQueue = PostSwipeQueue(candidates: initialQueue)
             currentPost = swipeQueue.current
@@ -43,7 +36,7 @@ final class MatchViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        let candidates = (try? await postRepository.fetchMatchCandidates()) ?? []
+        let candidates = (try? await fetchMatchCandidates.execute()) ?? []
         swipeQueue = PostSwipeQueue(candidates: candidates)
         currentPost = swipeQueue.current
     }
@@ -77,33 +70,19 @@ final class MatchViewModel {
         let swipedPost = post
         if swipeQueue.advance(with: action) != nil {
             Task {
-                try? await postRepository.recordSwipe(postId: swipedPost.id, action: action)
-                if action == .empathy, let legislatorId = swipedPost.legislatorId {
-                    await processCitizenLike(
-                        legislatorId: legislatorId,
-                        legislatorName: swipedPost.authorName
-                    )
+                guard let outcome = try? await processMatchSwipe.execute(
+                    post: swipedPost,
+                    action: action
+                ) else { return }
+
+                if case .matched(let conversation) = outcome {
+                    matchedPartnerName = conversation.partnerName
+                    showMatchAlert = true
+                    await onMatched?(conversation)
                 }
             }
         }
         currentPost = swipeQueue.current
-    }
-
-    private func processCitizenLike(legislatorId: String, legislatorName: String) async {
-        let citizenId = (try? await authRepository.fetchCurrentUser())?.id ?? MockMatching.demoCitizenId
-        guard let result = try? await matchRepository.recordCitizenLike(
-            citizenUserId: citizenId,
-            legislatorId: legislatorId,
-            legislatorName: legislatorName
-        ) else {
-            return
-        }
-
-        if case .matched(let conversation) = result {
-            matchedPartnerName = conversation.partnerName
-            showMatchAlert = true
-            await onMatched?(conversation)
-        }
     }
 
     func swipeRight() {
@@ -119,9 +98,7 @@ final class MatchViewModel {
 extension MatchViewModel {
     static var preview: MatchViewModel {
         MatchViewModel(
-            postRepository: MockPostRepository(),
-            matchRepository: MockMatchRepository(chatRepository: MockChatRepository()),
-            authRepository: MockAuthRepository(),
+            useCases: AppUseCases.make(from: .live),
             initialQueue: PostPreviewData.matchCandidates
         )
     }

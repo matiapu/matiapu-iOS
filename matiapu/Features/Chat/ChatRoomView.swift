@@ -8,43 +8,72 @@ import SwiftUI
 struct ChatRoomView: View {
     let conversation: ChatConversation
     @Bindable var viewModel: ChatViewModel
+    @State private var draftMessage = ""
 
     var body: some View {
         ChatScreenLayout {
             VStack(spacing: 0) {
                 messageList
-                messageInputBar
+                ChatInputBar(text: $draftMessage) {
+                    sendDraftMessage()
+                }
             }
         }
         .navigationTitle(conversation.partnerName)
         .task(id: conversation.id) {
             await viewModel.loadMessages(for: conversation.id)
         }
+        .onDisappear {
+            viewModel.clearOpenedConversation()
+        }
     }
 
     private var messageList: some View {
-        ScrollViewReader { proxy in
+        let messages = viewModel.messages(for: conversation.id)
+        let sections = ChatMessageGrouper.sections(from: messages)
+
+        return ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: AppSpacing.settingsCardSpacing) {
-                    if viewModel.isLoadingMessages && viewModel.messages.isEmpty {
+                LazyVStack(spacing: 10) {
+                    if viewModel.isLoadingMessages(for: conversation.id) {
                         ProgressView()
                             .tint(AppColors.onImageText)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, AppSpacing.profileGridLoadingVertical)
+                    } else if messages.isEmpty {
+                        ContentUnavailableView(
+                            "メッセージはありません",
+                            systemImage: "bubble.left.and.bubble.right",
+                            description: Text("最初のメッセージを送ってみましょう")
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, AppSpacing.profileGridLoadingVertical)
                     } else {
-                        ForEach(viewModel.messages) { message in
-                            messageBubble(message)
-                                .id(message.id)
+                        ForEach(sections) { section in
+                            ChatDateSeparator(label: section.dateLabel)
+
+                            ForEach(section.messages) { message in
+                                messageRow(message)
+                                    .id(message.id)
+                            }
                         }
                     }
+
+                    if let errorMessage = viewModel.errorMessage {
+                        Text(errorMessage)
+                            .font(AppTypography.createPostField)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 8)
+                    }
                 }
-                .padding(.horizontal, AppSpacing.settingsHorizontal)
-                .padding(.top, AppSpacing.settingsContentTop)
-                .padding(.bottom, AppSpacing.settingsSectionSpacing)
+                .padding(.horizontal, 12)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
             }
             .scrollIndicators(.hidden)
-            .onChange(of: viewModel.messages.count) {
-                guard let lastMessage = viewModel.messages.last else { return }
+            .onChange(of: messages.count) {
+                guard let lastMessage = messages.last else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
                     proxy.scrollTo(lastMessage.id, anchor: .bottom)
                 }
@@ -52,78 +81,24 @@ struct ChatRoomView: View {
         }
     }
 
-    private func messageBubble(_ message: ChatMessage) -> some View {
-        HStack {
-            if message.isFromCurrentUser {
-                Spacer(minLength: 48)
-            }
-
-            VStack(alignment: message.isFromCurrentUser ? .trailing : .leading, spacing: 4) {
-                Text(message.text)
-                    .font(AppTypography.createPostField)
-                    .foregroundStyle(
-                        message.isFromCurrentUser ? AppColors.onTagText : AppColors.settingsCardText
-                    )
-                    .multilineTextAlignment(message.isFromCurrentUser ? .trailing : .leading)
-                    .padding(.horizontal, AppSpacing.settingsHorizontal)
-                    .padding(.vertical, AppSpacing.settingsSortButtonVertical)
-                    .background(
-                        RoundedRectangle(cornerRadius: AppRadius.settingsCard, style: .continuous)
-                            .fill(
-                                message.isFromCurrentUser
-                                    ? AppColors.postTag
-                                    : AppColors.settingsCardBackground
-                            )
-                    )
-
-                Text(message.sentAt, format: .dateTime.hour().minute())
-                    .font(AppTypography.settingsSortButton)
-                    .foregroundStyle(AppColors.onImageText.opacity(0.8))
-            }
-
-            if !message.isFromCurrentUser {
-                Spacer(minLength: 48)
-            }
+    @ViewBuilder
+    private func messageRow(_ message: ChatMessage) -> some View {
+        if message.isFromCurrentUser {
+            ChatOutgoingMessageRow(message: message)
+        } else {
+            ChatIncomingMessageRow(message: message)
         }
     }
 
-    private var messageInputBar: some View {
-        HStack(spacing: AppSpacing.settingsProfileCardSpacing) {
-            TextField("", text: $viewModel.draftMessage, prompt: inputPrompt)
-                .font(AppTypography.settingsEditField)
-                .foregroundStyle(AppColors.settingsCardText)
-                .padding(.horizontal, AppSpacing.createPostFieldHorizontal)
-                .frame(height: AppSize.createPostTitleFieldHeight)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(AppColors.settingsCardBackground)
-                )
+    private func sendDraftMessage() {
+        let trimmed = draftMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
 
-            Button {
-                Task { await viewModel.sendMessage(conversationId: conversation.id) }
-            } label: {
-                Image(systemName: "paperplane.fill")
-                    .font(AppTypography.fabIcon)
-                    .foregroundStyle(AppColors.onTagText)
-                    .frame(width: AppSize.fab, height: AppSize.fab)
-                    .background(
-                        Circle()
-                            .fill(AppColors.postTag)
-                    )
-            }
-            .buttonStyle(.plain)
-            .disabled(viewModel.draftMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            .opacity(viewModel.draftMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+        let message = draftMessage
+        draftMessage = ""
+        Task {
+            await viewModel.sendMessage(conversationId: conversation.id, text: message)
         }
-        .padding(.horizontal, AppSpacing.settingsHorizontal)
-        .padding(.vertical, AppSpacing.settingsContentTop)
-        .padding(.bottom, AppSpacing.screenTop)
-    }
-
-    private var inputPrompt: Text {
-        Text("メッセージを入力")
-            .font(AppTypography.settingsEditField)
-            .foregroundStyle(AppColors.settingsSearchPlaceholder)
     }
 }
 
@@ -133,12 +108,12 @@ struct ChatRoomView: View {
             conversation: ChatConversation(
                 id: "chat-1",
                 partnerId: "leg-2",
-                partnerName: "田中 太郎",
-                lastMessage: "マッチしました！",
+                partnerName: "ブリティッシュブルー",
+                lastMessage: "こんばんにゃー",
                 updatedAt: .now,
                 unreadCount: 0
             ),
-            viewModel: .preview
+            viewModel: .roomPreview
         )
     }
 }

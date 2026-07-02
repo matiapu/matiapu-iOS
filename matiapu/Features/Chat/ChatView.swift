@@ -39,6 +39,13 @@ struct ChatView: View {
                             .buttonStyle(.plain)
                         }
                     }
+
+                    if let errorMessage = viewModel.errorMessage {
+                        Text(errorMessage)
+                            .font(AppTypography.createPostField)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
                 .padding(.horizontal, AppSpacing.settingsHorizontal)
                 .padding(.top, AppSpacing.settingsContentTop)
@@ -47,6 +54,12 @@ struct ChatView: View {
             .scrollIndicators(.hidden)
         }
         .navigationTitle("チャット")
+        .navigationDestination(item: $viewModel.conversationToOpen) { conversation in
+            ChatRoomView(
+                conversation: conversation,
+                viewModel: viewModel
+            )
+        }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
