@@ -47,6 +47,10 @@ struct MunicipalityCatalog {
         municipalitiesByPrefecture[prefectureName] ?? []
     }
 
+    func entry(forMunicipality name: String) -> MunicipalityEntry? {
+        allMunicipalities.first { $0.municipality.name == name }
+    }
+
     func searchMunicipalities(matching query: String) -> [MunicipalityEntry] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
@@ -54,6 +58,36 @@ struct MunicipalityCatalog {
         return allMunicipalities.filter {
             $0.municipality.name.contains(trimmed) || $0.prefectureName.contains(trimmed)
         }
+    }
+
+    /// 住所文字列の先頭から市区町村名を抽出する（旧データの復元用）
+    func resolveMunicipalityName(from text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        if allMunicipalities.contains(where: { $0.municipality.name == trimmed }) {
+            return trimmed
+        }
+
+        if let prefix = municipalityPrefix(in: trimmed) {
+            return prefix
+        }
+
+        for prefecture in prefectures where trimmed.hasPrefix(prefecture.name) {
+            let remainder = String(trimmed.dropFirst(prefecture.name.count))
+            if let prefix = municipalityPrefix(in: remainder) {
+                return prefix
+            }
+        }
+
+        return trimmed
+    }
+
+    private func municipalityPrefix(in text: String) -> String? {
+        allMunicipalities
+            .map(\.municipality.name)
+            .filter { text.hasPrefix($0) }
+            .max(by: { $0.count < $1.count })
     }
 }
 
