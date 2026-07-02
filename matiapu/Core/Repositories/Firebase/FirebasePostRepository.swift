@@ -19,7 +19,7 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
         self.likeService = likeService
     }
 
-    func fetchPosts(filter: MapFilter?) async throws -> [Post] {
+    func fetchPosts(filter: MapFilter?, municipality: String?) async throws -> [Post] {
         let posts = try await fetchPublicPosts()
         let located = posts.filter { $0.location != nil }
         guard let filter else { return located }
@@ -44,6 +44,10 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
         try await fetchPublicPosts()
     }
 
+    func fetchLikeCounts(for postIDs: [String]) async throws -> [String: Int] {
+        try await likeService.likeCounts(for: postIDs)
+    }
+
     func fetchUserPosts() async throws -> [Post] {
         let uid = try await FirebaseAuthSession.ensureSignedIn()
         let snapshot = try await db.collection(FirestoreCollections.posts)
@@ -54,6 +58,15 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
         return snapshot.documents.compactMap { document in
             FirestorePostMapper.post(id: document.documentID, data: document.data())
         }
+    }
+
+    func fetchPost(id: String) async throws -> Post {
+        let snapshot = try await db.collection(FirestoreCollections.posts).document(id).getDocument()
+        guard let data = snapshot.data(),
+              let post = FirestorePostMapper.post(id: snapshot.documentID, data: data) else {
+            throw FirebaseRepositoryError.documentNotFound
+        }
+        return post
     }
 
     func fetchLikedPosts() async throws -> [Post] {
@@ -97,6 +110,7 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
     ) async throws -> Post {
         let uid = try await FirebaseAuthSession.ensureSignedIn()
         let profile = try await authRepository.fetchCurrentUser()
+        let municipality = await Self.resolveMunicipalityName(from: profile.registeredArea)
         let postRef = db.collection(FirestoreCollections.posts).document()
         let imageURL = try await uploadImage(image, postID: postRef.documentID)
 
@@ -108,7 +122,8 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
             body: body,
             tag: tag.title,
             imageURL: imageURL,
-            location: location
+            location: location,
+            municipality: municipality
         )
 
         try await postRef.setData(payload)
@@ -124,12 +139,22 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
             imageData: image.jpegData(compressionQuality: 0.8),
             imageURL: imageURL,
             location: location,
+            municipality: municipality,
             authorUserId: uid
         )
     }
 
+    private static func resolveMunicipalityName(from registeredArea: String) async -> String? {
+        let trimmed = registeredArea.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        return await MainActor.run {
+            MunicipalityStore.shared.resolveMunicipalityName(from: trimmed) ?? trimmed
+        }
+    }
+
     private func fetchPublicPosts(limit: Int? = nil) async throws -> [Post] {
-        // status での絞り込みはマッパー側で行う。where + orderBy の複合インデックスを避けるため。
+        // municipality での絞り込みはマップ側で境界ポリゴンにより行う。
+        // Firestore の複合インデックス不要にし、municipality 未設定の投稿も取得できるようにする。
         var query: Query = db.collection(FirestoreCollections.posts)
             .order(by: FirestoreFields.Post.createdAt, descending: true)
 
@@ -153,5 +178,12 @@ final class FirebasePostRepository: PostRepository, @unchecked Sendable {
 
         _ = try await reference.putDataAsync(data, metadata: metadata)
         return try await reference.downloadURL().absoluteString
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

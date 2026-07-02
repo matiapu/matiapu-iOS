@@ -35,10 +35,9 @@ struct AppDependencies {
                 likeService: likeService
             ),
             authRepository: authRepository,
-            notificationRepository: MockNotificationRepository(),
+            notificationRepository: FirebaseNotificationRepository(),
             chatRepository: FirebaseChatRepository(
-                chatService: chatService,
-                authRepository: authRepository
+                chatService: chatService
             ),
             matchRepository: FirebaseMatchRepository(
                 matchService: matchService
@@ -60,10 +59,16 @@ struct AppDependencies {
             notificationRepository: MockNotificationRepository(),
             chatRepository: chatRepository,
             matchRepository: matchRepository,
-            commentRepository: UnavailableCommentRepository(),
-            shelterRepository: UnavailableShelterRepository(),
-            disasterRepository: UnavailableDisasterRepository(),
-            qaRepository: UnavailableQARepository()
+            commentRepository: MockCommentRepository(),
+            shelterRepository: MockShelterRepository(),
+            disasterRepository: MockDisasterRepository(),
+            qaRepository: MockQARepository()
         )
+    }
+}
+
+extension AppDependencies {
+    var useCases: AppUseCases {
+        AppUseCases.make(from: self)
     }
 }

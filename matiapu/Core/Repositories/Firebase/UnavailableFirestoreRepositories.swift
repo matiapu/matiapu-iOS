@@ -20,7 +20,7 @@ final class UnavailableShelterRepository: ShelterRepository, @unchecked Sendable
     func getShelter(shelterId: String) async throws -> Shelter { throw FirebaseRepositoryError.notConfigured }
     func updateShelter(shelterId: String, input: CreateShelterInput) async throws { throw FirebaseRepositoryError.notConfigured }
     func deleteShelter(shelterId: String) async throws { throw FirebaseRepositoryError.notConfigured }
-    func getShelters() async throws -> [Shelter] { throw FirebaseRepositoryError.notConfigured }
+    func getShelters(municipality: String?) async throws -> [Shelter] { throw FirebaseRepositoryError.notConfigured }
 }
 
 final class UnavailableDisasterRepository: DisasterRepository, @unchecked Sendable {
@@ -28,7 +28,7 @@ final class UnavailableDisasterRepository: DisasterRepository, @unchecked Sendab
     func getDisaster(disasterId: String) async throws -> Disaster { throw FirebaseRepositoryError.notConfigured }
     func updateDisaster(disasterId: String, input: CreateDisasterInput) async throws { throw FirebaseRepositoryError.notConfigured }
     func deleteDisaster(disasterId: String) async throws { throw FirebaseRepositoryError.notConfigured }
-    func getDisasters() async throws -> [Disaster] { throw FirebaseRepositoryError.notConfigured }
+    func getDisasters(within bounds: MunicipalityBounds?) async throws -> [Disaster] { throw FirebaseRepositoryError.notConfigured }
 }
 
 final class UnavailableQARepository: QARepository, @unchecked Sendable {

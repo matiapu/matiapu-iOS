@@ -18,11 +18,13 @@ enum PostRepositoryError: LocalizedError {
 }
 
 protocol PostRepository: Sendable {
-    func fetchPosts(filter: MapFilter?) async throws -> [Post]
+    func fetchPosts(filter: MapFilter?, municipality: String?) async throws -> [Post]
     func fetchMatchCandidates() async throws -> [Post]
     func fetchFeaturedPost() async throws -> Post?
     func fetchFeedPosts() async throws -> [Post]
+    func fetchLikeCounts(for postIDs: [String]) async throws -> [String: Int]
     func fetchUserPosts() async throws -> [Post]
+    func fetchPost(id: String) async throws -> Post
     func fetchLikedPosts() async throws -> [Post]
     func recordSwipe(postId: String, action: PostSwipeAction) async throws
     func createPost(
@@ -38,7 +40,7 @@ final class MockPostRepository: PostRepository, @unchecked Sendable {
     private var createdPosts: [Post] = []
     private let lock = NSLock()
 
-    func fetchPosts(filter: MapFilter?) async throws -> [Post] {
+    func fetchPosts(filter: MapFilter?, municipality: String?) async throws -> [Post] {
         let stored = locked { createdPosts }
         let all = PostPreviewData.mapPosts + stored
         let located = all.filter { $0.location != nil }
@@ -59,10 +61,24 @@ final class MockPostRepository: PostRepository, @unchecked Sendable {
         PostPreviewData.feedCandidates
     }
 
+    func fetchLikeCounts(for postIDs: [String]) async throws -> [String: Int] {
+        Dictionary(uniqueKeysWithValues: postIDs.enumerated().map { index, postID in
+            (postID, max(0, postIDs.count - index - 1))
+        })
+    }
+
     func fetchUserPosts() async throws -> [Post] {
         let created = locked { createdPosts }
         return (created + PostPreviewData.userPosts)
             .sorted { $0.postedAt > $1.postedAt }
+    }
+
+    func fetchPost(id: String) async throws -> Post {
+        let created = locked { createdPosts }
+        if let post = (created + PostPreviewData.userPosts).first(where: { $0.id == id }) {
+            return post
+        }
+        throw FirebaseRepositoryError.documentNotFound
     }
 
     func fetchLikedPosts() async throws -> [Post] {

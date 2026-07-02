@@ -14,6 +14,8 @@ protocol MatchRepository: Sendable {
         legislatorId: String,
         legislatorName: String
     ) async throws -> MatchResult?
+    /// 市民が議員をスキップ（Match画面）
+    func recordCitizenBad(citizenUserId: String, legislatorId: String) async throws
 }
 
 final class MockMatchRepository: MatchRepository, @unchecked Sendable {
@@ -60,6 +62,14 @@ final class MockMatchRepository: MatchRepository, @unchecked Sendable {
                 citizenUserId: citizenUserId,
                 legislatorName: legislatorName
             )
+        }
+    }
+
+    func recordCitizenBad(citizenUserId: String, legislatorId: String) async throws {
+        locked {
+            let pair = Pair(legislatorId: legislatorId, citizenUserId: citizenUserId)
+            legislatorLikes.remove(pair)
+            citizenLikes.remove(pair)
         }
     }
 

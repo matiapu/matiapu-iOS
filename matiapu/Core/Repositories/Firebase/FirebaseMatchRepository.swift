@@ -36,6 +36,10 @@ final class FirebaseMatchRepository: MatchRepository, @unchecked Sendable {
         )
     }
 
+    func recordCitizenBad(citizenUserId: String, legislatorId: String) async throws {
+        try await matchService.handleUserBad(userUID: citizenUserId, politicianUID: legislatorId)
+    }
+
     private func politicianName(for politicianUID: String) async throws -> String {
         let snapshot = try await db.collection(FirestoreCollections.users).document(politicianUID).getDocument()
         guard let data = snapshot.data() else { return "議員" }
