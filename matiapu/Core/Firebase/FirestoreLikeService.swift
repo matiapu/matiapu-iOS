@@ -39,4 +39,29 @@ final class FirestoreLikeService: @unchecked Sendable {
             .getDocuments()
         return snapshot.documents.compactMap { $0.data()[FirestoreFields.Like.postID] as? String }
     }
+
+    func likeCounts(for postIDs: [String]) async throws -> [String: Int] {
+        guard !postIDs.isEmpty else { return [:] }
+
+        var counts = Dictionary(uniqueKeysWithValues: postIDs.map { ($0, 0) })
+        let chunkSize = 10
+
+        var index = postIDs.startIndex
+        while index < postIDs.endIndex {
+            let end = postIDs.index(index, offsetBy: chunkSize, limitedBy: postIDs.endIndex) ?? postIDs.endIndex
+            let chunk = Array(postIDs[index..<end])
+            index = end
+
+            let snapshot = try await db.collection(FirestoreCollections.likes)
+                .whereField(FirestoreFields.Like.postID, in: chunk)
+                .getDocuments()
+
+            for document in snapshot.documents {
+                guard let postID = document.data()[FirestoreFields.Like.postID] as? String else { continue }
+                counts[postID, default: 0] += 1
+            }
+        }
+
+        return counts
+    }
 }

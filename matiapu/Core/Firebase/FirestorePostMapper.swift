@@ -33,6 +33,7 @@ enum FirestorePostMapper {
             imageData: nil,
             imageURL: data[FirestoreFields.Post.imageURL] as? String,
             location: location(from: data[FirestoreFields.Post.geoLocation]),
+            municipality: data[FirestoreFields.Post.municipality] as? String,
             authorUserId: data[FirestoreFields.Post.authorUID] as? String,
             legislatorId: nil
         )
@@ -66,7 +67,8 @@ enum FirestorePostMapper {
         body: String,
         tag: String,
         imageURL: String?,
-        location: PostLocation
+        location: PostLocation,
+        municipality: String?
     ) -> [String: Any] {
         var payload: [String: Any] = [
             FirestoreFields.Post.authorUID: authorUID,
@@ -82,6 +84,10 @@ enum FirestorePostMapper {
                 longitude: location.longitude
             ),
         ]
+
+        if let municipality, !municipality.isEmpty {
+            payload[FirestoreFields.Post.municipality] = municipality
+        }
 
         if let imageURL {
             payload[FirestoreFields.Post.imageURL] = imageURL
