@@ -15,15 +15,31 @@
 		672EC4F92FBEB90000DA6FB7 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 672EC4F82FBEB90000DA6FB7 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		67A1TEST22FC8D00100A863D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6716A7AD2FBEA977009EB2BC /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6716A7B42FBEA977009EB2BC;
+			remoteInfo = matiapu;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 		6716A7B52FBEA977009EB2BC /* matiapu.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = matiapu.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		67A1TEST12FC8D00100A863D2 /* matiapuTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = matiapuTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		6716A7B72FBEA977009EB2BC /* matiapu */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = matiapu;
+			sourceTree = "<group>";
+		};
+		67A1TEST32FC8D00100A863D2 /* matiapuTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = matiapuTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -42,6 +58,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		67A1TEST52FC8D00100A863D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -50,6 +73,7 @@
 			children = (
 				6701ADC12FC7D00100A863D2 /* Secrets.xcconfig */,
 				6716A7B72FBEA977009EB2BC /* matiapu */,
+				67A1TEST32FC8D00100A863D2 /* matiapuTests */,
 				6716A7B62FBEA977009EB2BC /* Products */,
 			);
 			sourceTree = "<group>";
@@ -58,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				6716A7B52FBEA977009EB2BC /* matiapu.app */,
+				67A1TEST12FC8D00100A863D2 /* matiapuTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,6 +118,29 @@
 			productReference = 6716A7B52FBEA977009EB2BC /* matiapu.app */;
 			productType = "com.apple.product-type.application";
 		};
+		67A1TEST42FC8D00100A863D2 /* matiapuTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 67A1TESTB2FC8D00100A863D2 /* Build configuration list for PBXNativeTarget "matiapuTests" */;
+			buildPhases = (
+				67A1TEST62FC8D00100A863D2 /* Sources */,
+				67A1TEST52FC8D00100A863D2 /* Frameworks */,
+				67A1TEST72FC8D00100A863D2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				67A1TEST82FC8D00100A863D2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				67A1TEST32FC8D00100A863D2 /* matiapuTests */,
+			);
+			name = matiapuTests;
+			packageProductDependencies = (
+			);
+			productName = matiapuTests;
+			productReference = 67A1TEST12FC8D00100A863D2 /* matiapuTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -105,6 +153,10 @@
 				TargetAttributes = {
 					6716A7B42FBEA977009EB2BC = {
 						CreatedOnToolsVersion = 26.0.1;
+					};
+					67A1TEST42FC8D00100A863D2 = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = 6716A7B42FBEA977009EB2BC;
 					};
 				};
 			};
@@ -128,12 +180,20 @@
 			projectRoot = "";
 			targets = (
 				6716A7B42FBEA977009EB2BC /* matiapu */,
+				67A1TEST42FC8D00100A863D2 /* matiapuTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		6716A7B32FBEA977009EB2BC /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		67A1TEST72FC8D00100A863D2 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -150,7 +210,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		67A1TEST62FC8D00100A863D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		67A1TEST82FC8D00100A863D2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6716A7B42FBEA977009EB2BC /* matiapu */;
+			targetProxy = 67A1TEST22FC8D00100A863D2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		6716A7C02FBEA97A009EB2BC /* Debug */ = {
@@ -350,6 +425,58 @@
 			};
 			name = Release;
 		};
+		67A1TESTA2FC8D00100A863D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K3BSAX58ZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minato.matiapuTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/matiapu.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/matiapu";
+			};
+			name = Release;
+		};
+		67A1TESTC2FC8D00100A863D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = K3BSAX58ZG;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.minato.matiapuTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/matiapu.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/matiapu";
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -367,6 +494,15 @@
 			buildConfigurations = (
 				6716A7C32FBEA97A009EB2BC /* Debug */,
 				6716A7C42FBEA97A009EB2BC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		67A1TESTB2FC8D00100A863D2 /* Build configuration list for PBXNativeTarget "matiapuTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				67A1TESTC2FC8D00100A863D2 /* Debug */,
+				67A1TESTA2FC8D00100A863D2 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
