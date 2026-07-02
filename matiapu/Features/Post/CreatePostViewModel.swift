@@ -3,6 +3,7 @@
 //  matiapu
 //
 
+import CoreLocation
 import Foundation
 import Observation
 import UIKit
@@ -15,24 +16,32 @@ final class CreatePostViewModel: Identifiable {
     var body = ""
     var selectedTag: MapFilter = .disaster
     private(set) var isSubmitting = false
+    private(set) var isResolvingLocation = false
     private(set) var submitError: String?
+    private(set) var capturedLocation: PostLocation?
 
     let capturedImage: UIImage
-    let capturedLocation: PostLocation?
 
-    private let postRepository: any PostRepository
-    private let onComplete: () -> Void
+    private let createPost: CreatePostUseCase
+    private let locationCaptureService: LocationCaptureService?
+    private let onComplete: (Post) -> Void
 
     init(
         capturedImage: UIImage,
         capturedLocation: PostLocation?,
-        postRepository: any PostRepository,
-        onComplete: @escaping () -> Void
+        createPost: CreatePostUseCase,
+        locationCaptureService: LocationCaptureService?,
+        onComplete: @escaping (Post) -> Void
     ) {
         self.capturedImage = capturedImage
         self.capturedLocation = capturedLocation
-        self.postRepository = postRepository
+        self.createPost = createPost
+        self.locationCaptureService = locationCaptureService
         self.onComplete = onComplete
+
+        if capturedLocation != nil {
+            locationCaptureService?.stopCapture()
+        }
     }
 
     var canSubmit: Bool {
@@ -40,15 +49,45 @@ final class CreatePostViewModel: Identifiable {
             && !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && capturedLocation != nil
             && !isSubmitting
+            && !isResolvingLocation
     }
 
     var locationStatusMessage: String? {
+        if isResolvingLocation {
+            return "位置情報を取得しています…"
+        }
+
         guard capturedLocation == nil else { return nil }
-        return "位置情報を取得できませんでした。設定アプリで位置情報サービスとカメラの位置情報利用をオンにしてください。"
+
+        if let locationCaptureService, !locationCaptureService.isLocationAuthorized {
+            return "位置情報を取得できませんでした。設定アプリで位置情報サービスをオンにしてください。"
+        }
+
+        return "位置情報を取得できませんでした。屋外など電波の良い場所で再度お試しください。"
+    }
+
+    func resolveLocationIfNeeded() async {
+        guard capturedLocation == nil, let locationCaptureService else { return }
+
+        isResolvingLocation = true
+        defer { isResolvingLocation = false }
+
+        capturedLocation = await locationCaptureService.acquireCoordinate(
+            photoCoordinate: nil,
+            timeout: 12
+        )
+        locationCaptureService.stopCapture()
     }
 
     func submit() async {
-        guard canSubmit, let capturedLocation else { return }
+        if capturedLocation == nil {
+            await resolveLocationIfNeeded()
+        }
+
+        guard canSubmit, let capturedLocation else {
+            submitError = PostRepositoryError.missingLocation.errorDescription
+            return
+        }
 
         isSubmitting = true
         submitError = nil
@@ -58,27 +97,32 @@ final class CreatePostViewModel: Identifiable {
         let trimmedBody = body.trimmingCharacters(in: .whitespacesAndNewlines)
 
         do {
-            _ = try await postRepository.createPost(
+            let createdPost = try await createPost.execute(
                 title: trimmedTitle,
                 body: trimmedBody,
                 tag: selectedTag,
                 image: capturedImage,
                 location: capturedLocation
             )
-            onComplete()
+            locationCaptureService?.stopCapture()
+            onComplete(createdPost)
         } catch {
-            submitError = error.localizedDescription
+            submitError = PostSubmissionErrorMapper.message(for: error)
         }
     }
 }
 
 #if DEBUG
 extension CreatePostViewModel {
-    static func preview(onComplete: @escaping () -> Void = {}) -> CreatePostViewModel {
+    static func preview(onComplete: @escaping (Post) -> Void = { _ in }) -> CreatePostViewModel {
         CreatePostViewModel(
             capturedImage: UIImage(named: MockImages.postImage(at: 0)) ?? UIImage(),
-            capturedLocation: PostLocation(latitude: 35.681228, longitude: 139.767052),
-            postRepository: MockPostRepository(),
+            capturedLocation: PostLocation(
+                latitude: PreviewMockRegion.center.latitude,
+                longitude: PreviewMockRegion.center.longitude
+            ),
+            createPost: CreatePostUseCase(postRepository: MockPostRepository()),
+            locationCaptureService: nil,
             onComplete: onComplete
         )
     }

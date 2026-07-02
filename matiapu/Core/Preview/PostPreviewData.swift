@@ -3,6 +3,7 @@
 //  matiapu
 //
 
+import CoreLocation
 import Foundation
 
 enum PostPreviewData {
@@ -68,7 +69,18 @@ enum PostPreviewData {
     ]
 
     static let feedCandidates: [Post] = [
-        featured,
+        Post(
+            id: "preview-feed-1",
+            authorName: "地域の住民A",
+            tag: "公園",
+            title: "児童公園の遊具が\n老朽化しています",
+            body: "ブランコのチェーンが錆びていて危ないです。",
+            postedAt: .now,
+            imageName: MockImages.postImage(at: 0),
+            location: nil,
+            municipality: PreviewMockRegion.municipalityName,
+            authorUserId: "citizen-feed-1"
+        ),
         Post(
             id: "preview-feed-2",
             authorName: "地域の住民",
@@ -78,6 +90,7 @@ enum PostPreviewData {
             postedAt: .now,
             imageName: MockImages.postImage(at: 5),
             location: nil,
+            municipality: PreviewMockRegion.municipalityName,
             authorUserId: "citizen-2"
         ),
         Post(
@@ -88,7 +101,21 @@ enum PostPreviewData {
             body: "週末になるとペットボトルが散乱しています。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 6),
-            location: nil
+            location: nil,
+            municipality: PreviewMockRegion.municipalityName,
+            authorUserId: "citizen-3"
+        ),
+        Post(
+            id: "preview-feed-other-region",
+            authorName: "他地域の住民",
+            tag: "道路",
+            title: "他地域の投稿",
+            body: "フィードには表示されない想定です。",
+            postedAt: .now,
+            imageName: MockImages.postImage(at: 1),
+            location: nil,
+            municipality: "渋谷区",
+            authorUserId: "citizen-other"
         ),
     ]
 
@@ -101,7 +128,10 @@ enum PostPreviewData {
             body: "倒木の報告があります。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 1),
-            location: PostLocation(latitude: 35.681228, longitude: 139.767052)
+            location: PostLocation(
+                latitude: PreviewMockRegion.center.latitude,
+                longitude: PreviewMockRegion.center.longitude
+            )
         ),
         Post(
             id: "preview-map-road",
@@ -111,7 +141,7 @@ enum PostPreviewData {
             body: "歩道に小さな穴が開いています。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 2),
-            location: PostLocation(latitude: 35.683500, longitude: 139.765000)
+            location: PostLocation(latitude: 35.696172, longitude: 139.701548)
         ),
         Post(
             id: "preview-map-shop",
@@ -121,7 +151,7 @@ enum PostPreviewData {
             body: "駅前にオープンしました。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 3),
-            location: PostLocation(latitude: 35.678000, longitude: 139.769000)
+            location: PostLocation(latitude: 35.690672, longitude: 139.705548)
         ),
         Post(
             id: "preview-map-disaster-2",
@@ -131,7 +161,7 @@ enum PostPreviewData {
             body: "強風で看板が破損しています。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 4),
-            location: PostLocation(latitude: 35.685000, longitude: 139.771000)
+            location: PostLocation(latitude: 35.697672, longitude: 139.707548)
         ),
         Post(
             id: "preview-map-bulletin",
@@ -141,7 +171,7 @@ enum PostPreviewData {
             body: "夜間に同じ場所をうろつく人物を見かけました。",
             postedAt: .now,
             imageName: MockImages.postImage(at: 5),
-            location: PostLocation(latitude: 35.682000, longitude: 139.768000)
+            location: PostLocation(latitude: 35.694672, longitude: 139.704548)
         ),
     ]
 

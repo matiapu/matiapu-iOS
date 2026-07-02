@@ -6,7 +6,7 @@
 import CoreLocation
 import Foundation
 
-struct PostLocation: Hashable, Sendable {
+nonisolated struct PostLocation: Hashable, Sendable {
     let latitude: Double
     let longitude: Double
 

@@ -15,59 +15,33 @@ struct CreatePostView: View {
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(alignment: .leading, spacing: AppSpacing.createPostSectionSpacing) {
-                    photoPreview(maxHeight: geometry.size.height * AppSize.postDetailImageHeightRatio)
-                    titleSection
-                    bodySection
-                    tagSection
-                    locationSection
-                    if let submitError = viewModel.submitError {
-                        submitErrorSection(submitError)
-                    }
-                    submitButton
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppSpacing.createPostSectionSpacing) {
+                CreatePostPhotoPreview(
+                    sourceImage: viewModel.capturedImage,
+                    maxWidth: AppSize.postCardWidth,
+                    maxHeight: AppSize.createPostPhotoMaxHeight
+                )
+                titleSection
+                bodySection
+                CreatePostTagSection(selectedTag: $viewModel.selectedTag)
+                locationSection
+                if let submitError = viewModel.submitError {
+                    submitErrorSection(submitError)
                 }
-                .frame(maxWidth: AppSize.postCardWidth)
-                .frame(maxWidth: .infinity)
-                .padding(.horizontal, AppSpacing.screenHorizontal)
-                .padding(.top, AppSpacing.createPostTop)
-                .padding(.bottom, AppSpacing.createPostBottom)
+                submitButton
             }
-            .scrollDismissesKeyboard(.interactively)
+            .frame(maxWidth: AppSize.postCardWidth)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, AppSpacing.screenHorizontal)
+            .padding(.top, AppSpacing.createPostTop)
+            .padding(.bottom, AppSpacing.createPostBottom)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .task {
+            await viewModel.resolveLocationIfNeeded()
         }
         .background(AppColors.postScreenBackgroundGradient.ignoresSafeArea())
-    }
-
-    private func photoPreview(maxHeight: CGFloat) -> some View {
-        let fittedSize = fittedImageSize(
-            image: viewModel.capturedImage,
-            maxWidth: AppSize.postCardWidth,
-            maxHeight: maxHeight
-        )
-
-        return Image(uiImage: viewModel.capturedImage)
-            .resizable()
-            .frame(width: fittedSize.width, height: fittedSize.height)
-            .clipShape(RoundedRectangle(cornerRadius: AppRadius.createPostPhoto, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: AppRadius.createPostPhoto, style: .continuous)
-                    .stroke(AppColors.onImageText, lineWidth: 2)
-            }
-            .frame(maxWidth: .infinity)
-    }
-
-    private func fittedImageSize(image: UIImage, maxWidth: CGFloat, maxHeight: CGFloat) -> CGSize {
-        let imageSize = image.size
-        guard imageSize.width > 0, imageSize.height > 0 else {
-            return CGSize(width: maxWidth, height: maxHeight)
-        }
-
-        let scale = min(maxWidth / imageSize.width, maxHeight / imageSize.height)
-        return CGSize(
-            width: floor(imageSize.width * scale),
-            height: floor(imageSize.height * scale)
-        )
     }
 
     private var titleSection: some View {
@@ -109,21 +83,6 @@ struct CreatePostView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var tagSection: some View {
-        VStack(alignment: .leading, spacing: AppSpacing.createPostLabelSpacing) {
-            fieldLabel("タグ")
-
-            HStack(spacing: AppSpacing.createPostTagSpacing) {
-                ForEach(MapFilter.allCases, id: \.self) { tag in
-                    tagButton(tag)
-                        .frame(maxWidth: .infinity)
-                }
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     @ViewBuilder
     private var locationSection: some View {
         if let message = viewModel.locationStatusMessage {
@@ -156,19 +115,26 @@ struct CreatePostView: View {
                 await viewModel.submit()
             }
         } label: {
-            Text("投稿する")
-                .font(AppTypography.createPostSubmit)
-                .foregroundStyle(AppColors.onTagText)
-                .frame(maxWidth: .infinity)
-                .frame(height: AppSize.createPostSubmitHeight)
-                .background(
-                    Capsule(style: .continuous)
-                        .fill(AppColors.createPostFieldBackground)
-                )
+            Group {
+                if viewModel.isSubmitting {
+                    ProgressView()
+                        .tint(AppColors.onTagText)
+                } else {
+                    Text("投稿する")
+                }
+            }
+            .font(AppTypography.createPostSubmit)
+            .foregroundStyle(AppColors.onTagText)
+            .frame(maxWidth: .infinity)
+            .frame(height: AppSize.createPostSubmitHeight)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(AppColors.createPostFieldBackground)
+            )
         }
         .buttonStyle(.plain)
-        .disabled(!viewModel.canSubmit)
-        .opacity(viewModel.canSubmit ? 1 : 0.55)
+        .disabled(!viewModel.canSubmit && !viewModel.isSubmitting)
+        .opacity(viewModel.canSubmit || viewModel.isSubmitting ? 1 : 0.55)
         .padding(.top, AppSpacing.createPostSubmitTop)
         .frame(maxWidth: .infinity)
     }
@@ -179,11 +145,102 @@ struct CreatePostView: View {
             .foregroundStyle(AppColors.onImageText)
     }
 
+    private var titlePrompt: Text {
+        Text("タイトルを入力")
+            .foregroundStyle(AppColors.createPostPlaceholder)
+    }
+
+    private var bodyPrompt: Text {
+        Text("本文を入力")
+            .foregroundStyle(AppColors.createPostPlaceholder)
+    }
+}
+
+private struct CreatePostPhotoPreview: View {
+    let sourceImage: UIImage
+    let maxWidth: CGFloat
+    let maxHeight: CGFloat
+
+    @Environment(\.displayScale) private var displayScale
+    @State private var displayImage: UIImage?
+
+    var body: some View {
+        let image = displayImage ?? sourceImage
+        let fittedSize = fittedImageSize(
+            image: image,
+            maxWidth: maxWidth,
+            maxHeight: maxHeight
+        )
+
+        Image(uiImage: image)
+            .resizable()
+            .frame(width: fittedSize.width, height: fittedSize.height)
+            .clipShape(RoundedRectangle(cornerRadius: AppRadius.createPostPhoto, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: AppRadius.createPostPhoto, style: .continuous)
+                    .stroke(AppColors.onImageText, lineWidth: 2)
+            }
+            .frame(maxWidth: .infinity)
+            .task(id: downsampleTaskID) {
+                let maxPixelSize = ImageDownsampler.maxPixelSize(
+                    for: CGSize(width: maxWidth, height: maxHeight),
+                    scale: displayScale
+                )
+                guard maxPixelSize > 0 else { return }
+
+                let downsampled = ImageDownsampler.downsample(
+                    image: sourceImage,
+                    maxPixelSize: maxPixelSize
+                )
+                if let downsampled {
+                    displayImage = downsampled
+                }
+            }
+    }
+
+    private var downsampleTaskID: String {
+        "\(ObjectIdentifier(sourceImage).hashValue)-\(maxWidth)-\(maxHeight)-\(displayScale)"
+    }
+
+    private func fittedImageSize(image: UIImage, maxWidth: CGFloat, maxHeight: CGFloat) -> CGSize {
+        let imageSize = image.size
+        guard imageSize.width > 0, imageSize.height > 0 else {
+            return CGSize(width: maxWidth, height: maxHeight)
+        }
+
+        let scale = min(maxWidth / imageSize.width, maxHeight / imageSize.height)
+        return CGSize(
+            width: floor(imageSize.width * scale),
+            height: floor(imageSize.height * scale)
+        )
+    }
+}
+
+private struct CreatePostTagSection: View {
+    @Binding var selectedTag: MapFilter
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.createPostLabelSpacing) {
+            Text("タグ")
+                .font(AppTypography.createPostLabel)
+                .foregroundStyle(AppColors.onImageText)
+
+            HStack(spacing: AppSpacing.createPostTagSpacing) {
+                ForEach(MapFilter.allCases, id: \.self) { tag in
+                    tagButton(tag)
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func tagButton(_ tag: MapFilter) -> some View {
-        let isSelected = viewModel.selectedTag == tag
+        let isSelected = selectedTag == tag
 
         return Button {
-            viewModel.selectedTag = tag
+            selectedTag = tag
         } label: {
             Text(tag.title)
                 .font(AppTypography.createPostTag)
@@ -204,16 +261,6 @@ struct CreatePostView: View {
                 }
         }
         .buttonStyle(.plain)
-    }
-
-    private var titlePrompt: Text {
-        Text("タイトルを入力")
-            .foregroundStyle(AppColors.createPostPlaceholder)
-    }
-
-    private var bodyPrompt: Text {
-        Text("本文を入力")
-            .foregroundStyle(AppColors.createPostPlaceholder)
     }
 }
 

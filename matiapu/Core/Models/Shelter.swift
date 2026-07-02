@@ -11,6 +11,7 @@ struct Shelter: Identifiable, Hashable {
     let latitude: Double
     let longitude: Double
     let capacity: Int?
+    let municipality: String?
 }
 
 struct CreateShelterInput: Sendable {

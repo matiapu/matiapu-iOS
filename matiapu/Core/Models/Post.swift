@@ -20,6 +20,8 @@ struct Post: Identifiable, Hashable {
     /// Firebase Storage 上の画像 URL。
     let imageURL: String?
     let location: PostLocation?
+    /// 投稿が属する市区町村（マップ絞り込み用）
+    let municipality: String?
     /// 投稿した市民のユーザーID
     let authorUserId: String?
     /// 議員カード（Match画面）の議員ID
@@ -36,6 +38,7 @@ struct Post: Identifiable, Hashable {
         imageData: Data? = nil,
         imageURL: String? = nil,
         location: PostLocation?,
+        municipality: String? = nil,
         authorUserId: String? = nil,
         legislatorId: String? = nil
     ) {
@@ -49,6 +52,7 @@ struct Post: Identifiable, Hashable {
         self.imageData = imageData
         self.imageURL = imageURL
         self.location = location
+        self.municipality = municipality
         self.authorUserId = authorUserId
         self.legislatorId = legislatorId
     }

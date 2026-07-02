@@ -13,6 +13,7 @@ struct PostCardDisplay {
     let showsTitle: Bool
     let showsTag: Bool
     let showsSeeMoreLink: Bool
+    let showsComments: Bool
     let collapsedBodyLineLimit: Int?
 
     static let postFeed = PostCardDisplay(
@@ -22,6 +23,7 @@ struct PostCardDisplay {
         showsTitle: true,
         showsTag: true,
         showsSeeMoreLink: true,
+        showsComments: false,
         collapsedBodyLineLimit: 5
     )
 
@@ -32,6 +34,7 @@ struct PostCardDisplay {
         showsTitle: true,
         showsTag: true,
         showsSeeMoreLink: true,
+        showsComments: false,
         collapsedBodyLineLimit: 5
     )
 
@@ -42,6 +45,7 @@ struct PostCardDisplay {
         showsTitle: true,
         showsTag: true,
         showsSeeMoreLink: false,
+        showsComments: true,
         collapsedBodyLineLimit: nil
     )
 
@@ -52,6 +56,7 @@ struct PostCardDisplay {
         showsTitle: true,
         showsTag: true,
         showsSeeMoreLink: false,
+        showsComments: false,
         collapsedBodyLineLimit: nil
     )
 }

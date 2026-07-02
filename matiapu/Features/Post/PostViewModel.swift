@@ -17,25 +17,23 @@ final class PostViewModel {
     private(set) var capturedImage: UIImage?
     private(set) var capturedLocation: PostLocation?
     private(set) var createPostViewModel: CreatePostViewModel?
+    var showMatchAlert = false
+    var matchedPartnerName: String?
     private(set) var isLoading = false
 
-    var onPostCreated: (() async -> Void)?
+    var onPostCreated: ((Post) async -> Void)?
+    var onMatched: ((ChatConversation) async -> Void)?
 
     private var swipeQueue = PostSwipeQueue()
-    private let postRepository: any PostRepository
-    private let matchRepository: any MatchRepository
-    private let authRepository: any AuthRepository
+    private let fetchFeedPosts: FetchFeedPostsUseCase
+    private let recordPostSwipe: RecordPostSwipeUseCase
+    private let createPost: CreatePostUseCase
     private var locationCaptureService: LocationCaptureService?
 
-    init(
-        postRepository: any PostRepository,
-        matchRepository: any MatchRepository,
-        authRepository: any AuthRepository,
-        initialQueue: [Post]? = nil
-    ) {
-        self.postRepository = postRepository
-        self.matchRepository = matchRepository
-        self.authRepository = authRepository
+    init(useCases: AppUseCases, initialQueue: [Post]? = nil) {
+        self.fetchFeedPosts = useCases.fetchFeedPosts
+        self.recordPostSwipe = useCases.recordPostSwipe
+        self.createPost = useCases.createPost
         if let initialQueue {
             swipeQueue = PostSwipeQueue(candidates: initialQueue)
             post = swipeQueue.current
@@ -47,7 +45,7 @@ final class PostViewModel {
         isLoading = true
         defer { isLoading = false }
 
-        let candidates = (try? await postRepository.fetchFeedPosts()) ?? []
+        let candidates = (try? await fetchFeedPosts.execute()) ?? []
         swipeQueue = PostSwipeQueue(candidates: candidates)
         post = swipeQueue.current
     }
@@ -58,18 +56,20 @@ final class PostViewModel {
         detailPost = nil
         if swipeQueue.advance(with: action) != nil {
             Task {
-                try? await postRepository.recordSwipe(postId: current.id, action: action)
-                if action == .empathy {
-                    let legislatorId = (try? await authRepository.fetchCurrentUser())?.id
-                        ?? MockMatching.demoLegislatorId
-                    _ = try? await matchRepository.recordLegislatorLike(
-                        legislatorId: legislatorId,
-                        post: current
-                    )
+                guard let outcome = try? await recordPostSwipe.execute(post: current, action: action) else { return }
+                if case .matched(let conversation) = outcome {
+                    matchedPartnerName = conversation.partnerName
+                    showMatchAlert = true
+                    await onMatched?(conversation)
                 }
             }
         }
         post = swipeQueue.current
+    }
+
+    func dismissMatchAlert() {
+        showMatchAlert = false
+        matchedPartnerName = nil
     }
 
     func openDetail() {
@@ -86,23 +86,24 @@ final class PostViewModel {
         isCameraPresented = false
 
         Task {
-            let deviceCoordinate = await resolvedDeviceCoordinate(fallbackPhotoCoordinate: coordinate)
-            capturedImage = image
-            capturedLocation = PostLocationResolver.resolve(
+            let location = await locationService.acquireCoordinate(
                 photoCoordinate: coordinate,
-                deviceCoordinate: deviceCoordinate
+                timeout: 12
             )
-            locationService.stopCapture()
+
+            capturedImage = image
+            capturedLocation = location
 
             createPostViewModel = CreatePostViewModel(
                 capturedImage: image,
-                capturedLocation: capturedLocation,
-                postRepository: postRepository,
-                onComplete: { [weak self] in
+                capturedLocation: location,
+                createPost: createPost,
+                locationCaptureService: locationService,
+                onComplete: { [weak self] createdPost in
                     guard let self else { return }
                     self.dismissCreatePost()
                     Task {
-                        await self.onPostCreated?()
+                        await self.onPostCreated?(createdPost)
                     }
                 }
             )
@@ -115,6 +116,7 @@ final class PostViewModel {
     }
 
     func dismissCreatePost() {
+        locationService.stopCapture()
         capturedImage = nil
         capturedLocation = nil
         createPostViewModel = nil
@@ -126,27 +128,13 @@ final class PostViewModel {
         }
         return locationCaptureService!
     }
-
-    private func resolvedDeviceCoordinate(fallbackPhotoCoordinate: CLLocationCoordinate2D?) async -> CLLocationCoordinate2D? {
-        if fallbackPhotoCoordinate != nil {
-            return locationService.currentCoordinate
-        }
-
-        if let currentCoordinate = locationService.currentCoordinate {
-            return currentCoordinate
-        }
-
-        return await locationService.waitForLocation()
-    }
 }
 
 #if DEBUG
 extension PostViewModel {
     static var preview: PostViewModel {
         PostViewModel(
-            postRepository: MockPostRepository(),
-            matchRepository: MockMatchRepository(chatRepository: MockChatRepository()),
-            authRepository: MockAuthRepository(),
+            useCases: AppUseCases.make(from: .live),
             initialQueue: PostPreviewData.feedCandidates
         )
     }
