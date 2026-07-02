@@ -7,7 +7,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @Bindable var viewModel: SettingsViewModel
-    var onSignOut: () -> Void = {}
 
     var body: some View {
         SettingsScreenLayout {
@@ -36,8 +35,22 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Button(action: onSignOut) {
+                    NavigationLink(value: SettingsDestination.qaList) {
+                        SettingsMenuRow(title: "よくある質問", showsChevron: false)
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(value: SettingsDestination.signOutConfirmation) {
                         SettingsMenuRow(title: "ログアウト", showsChevron: false)
+                    }
+                    .buttonStyle(.plain)
+
+                    NavigationLink(value: SettingsDestination.deleteAccountConfirmation) {
+                        SettingsMenuRow(
+                            title: "アカウント削除",
+                            showsChevron: false,
+                            titleColor: .red
+                        )
                     }
                     .buttonStyle(.plain)
                 }
@@ -77,7 +90,7 @@ struct SettingsView: View {
     private var notificationsRow: some View {
         SettingsCard {
             ZStack(alignment: .bottomTrailing) {
-                Text("お知らせ")
+                Text("通知")
                     .font(AppTypography.settingsMenuTitle)
                     .foregroundStyle(AppColors.settingsCardText)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

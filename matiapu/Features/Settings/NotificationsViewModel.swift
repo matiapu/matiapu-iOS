@@ -12,25 +12,25 @@ final class NotificationsViewModel {
     private(set) var notifications: [AppNotification] = []
     private(set) var isLoading = false
 
-    private let notificationRepository: any NotificationRepository
+    private let fetchNotifications: FetchNotificationsUseCase
 
-    init(notificationRepository: any NotificationRepository) {
-        self.notificationRepository = notificationRepository
+    init(fetchNotifications: FetchNotificationsUseCase) {
+        self.fetchNotifications = fetchNotifications
     }
 
     var unreadCount: Int {
-        notifications.filter { !$0.isRead }.count
+        fetchNotifications.unreadCount(in: notifications)
     }
 
     func loadNotifications() async {
         isLoading = true
         defer { isLoading = false }
-        notifications = (try? await notificationRepository.fetchNotifications()) ?? []
+        notifications = (try? await fetchNotifications.execute()) ?? []
     }
 
     func markAsRead(_ notification: AppNotification) async {
         guard !notification.isRead else { return }
-        try? await notificationRepository.markAsRead(notificationId: notification.id)
+        try? await fetchNotifications.markAsRead(notificationId: notification.id)
         await loadNotifications()
     }
 
@@ -42,10 +42,15 @@ final class NotificationsViewModel {
 #if DEBUG
 extension NotificationsViewModel {
     static var preview: NotificationsViewModel {
-        let viewModel = NotificationsViewModel(notificationRepository: MockNotificationRepository())
+        let viewModel = NotificationsViewModel(
+            fetchNotifications: FetchNotificationsUseCase(
+                notificationRepository: MockNotificationRepository()
+            )
+        )
         viewModel.notifications = [
             AppNotification(
                 id: "preview-1",
+                kind: .announcement,
                 title: "アプリをご利用いただきありがとうございます",
                 body: "matiapuへようこそ。",
                 publishedAt: .now,

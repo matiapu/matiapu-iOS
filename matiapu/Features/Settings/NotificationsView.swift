@@ -28,7 +28,7 @@ struct NotificationsView: View {
 
     private var headerCard: some View {
         SettingsCard {
-            Text("お知らせ")
+            Text("通知")
                 .font(AppTypography.settingsHeaderTitle)
                 .foregroundStyle(AppColors.settingsCardText)
                 .frame(maxWidth: .infinity)
@@ -45,9 +45,9 @@ struct NotificationsView: View {
                 .padding(.vertical, AppSpacing.profileGridLoadingVertical)
         } else if viewModel.notifications.isEmpty {
             ContentUnavailableView(
-                "お知らせはありません",
+                "通知はありません",
                 systemImage: "bell.slash",
-                description: Text("新しいお知らせが届くとここに表示されます")
+                description: Text("お知らせ・メッセージ・マッチの通知がここに表示されます")
             )
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppSpacing.profileGridLoadingVertical)
@@ -68,6 +68,8 @@ struct NotificationsView: View {
     private func notificationCard(_ notification: AppNotification) -> some View {
         SettingsCard {
             VStack(alignment: .leading, spacing: AppSpacing.createPostLabelSpacing) {
+                notificationKindBadge(notification.kind)
+
                 HStack(alignment: .top, spacing: 8) {
                     Text(notification.title)
                         .font(AppTypography.settingsMenuTitle)
@@ -103,6 +105,19 @@ struct NotificationsView: View {
             }
             .padding(AppSpacing.settingsProfileCardPadding)
         }
+    }
+
+    private func notificationKindBadge(_ kind: AppNotificationKind) -> some View {
+        Label(kind.label, systemImage: kind.systemImageName)
+            .font(AppTypography.settingsSortButton)
+            .foregroundStyle(AppColors.postTag)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(AppColors.postTag.opacity(0.15))
+            )
+            .padding(.top, 2)
     }
 }
 
