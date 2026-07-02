@@ -9,8 +9,12 @@ struct ProfileView: View {
     @Bindable var viewModel: ProfileViewModel
     let dependencies: AppDependencies
     var onSignOut: () -> Void = {}
+    var onRegisteredAreaChanged: () -> Void = {}
+    var shouldOpenNotifications = false
+    var onNotificationsOpened: () -> Void = {}
     @State private var selectedPost: Post?
     @State private var showsSettings = false
+    @State private var openNotificationsOnAppear = false
 
     var body: some View {
         GeometryReader { geometry in
@@ -38,24 +42,33 @@ struct ProfileView: View {
             }
         }
         .task {
-            await viewModel.loadProfile()
+            await viewModel.loadProfileIfNeeded()
         }
         .sheet(item: $selectedPost) { post in
-            PostDetailView(post: post, display: .postDetail)
+            PostDetailView(post: post, display: .postDetail, dependencies: dependencies)
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(AppRadius.postDetailSheet)
         }
         .fullScreenCover(isPresented: $showsSettings, onDismiss: {
             Task { await viewModel.loadProfile() }
+            onRegisteredAreaChanged()
+            openNotificationsOnAppear = false
         }) {
             SettingsFlowView(
                 dependencies: dependencies,
+                openNotificationsOnAppear: openNotificationsOnAppear,
                 onSignOut: {
                     showsSettings = false
                     onSignOut()
                 }
             )
+        }
+        .onChange(of: shouldOpenNotifications) { _, shouldOpen in
+            guard shouldOpen else { return }
+            openNotificationsOnAppear = true
+            showsSettings = true
+            onNotificationsOpened()
         }
     }
 

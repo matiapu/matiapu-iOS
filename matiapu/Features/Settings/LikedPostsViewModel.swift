@@ -14,10 +14,10 @@ final class LikedPostsViewModel {
     var searchText = ""
     var sortOrder: LikedPostSortOrder = .newestFirst
 
-    private let postRepository: any PostRepository
+    private let fetchLikedPosts: FetchLikedPostsUseCase
 
-    init(postRepository: any PostRepository) {
-        self.postRepository = postRepository
+    init(fetchLikedPosts: FetchLikedPostsUseCase) {
+        self.fetchLikedPosts = fetchLikedPosts
     }
 
     var filteredPosts: [Post] {
@@ -43,14 +43,16 @@ final class LikedPostsViewModel {
     func loadPosts() async {
         isLoading = true
         defer { isLoading = false }
-        posts = (try? await postRepository.fetchLikedPosts()) ?? []
+        posts = (try? await fetchLikedPosts.execute()) ?? []
     }
 }
 
 #if DEBUG
 extension LikedPostsViewModel {
     static var preview: LikedPostsViewModel {
-        let viewModel = LikedPostsViewModel(postRepository: MockPostRepository())
+        let viewModel = LikedPostsViewModel(
+            fetchLikedPosts: FetchLikedPostsUseCase(postRepository: MockPostRepository())
+        )
         viewModel.posts = PostPreviewData.likedPosts
         return viewModel
     }

@@ -7,6 +7,7 @@ import SwiftUI
 
 struct LikedPostsView: View {
   @Bindable var viewModel: LikedPostsViewModel
+  let dependencies: AppDependencies
   @State private var selectedPost: Post?
 
   var body: some View {
@@ -30,7 +31,7 @@ struct LikedPostsView: View {
       await viewModel.loadPosts()
     }
     .sheet(item: $selectedPost) { post in
-      PostDetailView(post: post, display: .postDetail)
+      PostDetailView(post: post, display: .postDetail, dependencies: dependencies)
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .presentationCornerRadius(AppRadius.postDetailSheet)
@@ -123,6 +124,6 @@ struct LikedPostsView: View {
 
 #Preview {
   NavigationStack {
-    LikedPostsView(viewModel: .preview)
+    LikedPostsView(viewModel: .preview, dependencies: .live)
   }
 }

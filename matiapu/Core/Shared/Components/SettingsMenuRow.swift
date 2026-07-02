@@ -8,6 +8,7 @@ import SwiftUI
 struct SettingsMenuRow: View {
   let title: String
   var showsChevron = true
+  var titleColor: Color = AppColors.settingsCardText
 
   var body: some View {
     SettingsCard {
@@ -16,7 +17,7 @@ struct SettingsMenuRow: View {
 
         Text(title)
           .font(AppTypography.settingsMenuTitle)
-          .foregroundStyle(AppColors.settingsCardText)
+          .foregroundStyle(titleColor)
           .multilineTextAlignment(.center)
 
         Spacer(minLength: 0)

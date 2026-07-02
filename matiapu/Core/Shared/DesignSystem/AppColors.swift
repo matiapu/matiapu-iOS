@@ -89,4 +89,11 @@ enum AppColors {
     static let authDivider = Color(red: 195 / 255, green: 198 / 255, blue: 214 / 255).opacity(0.5)
     static let authSocialBorder = Color(red: 195 / 255, green: 198 / 255, blue: 214 / 255)
     static let authIconMuted = Color(red: 116 / 255, green: 119 / 255, blue: 131 / 255)
+
+    // MARK: - Chat
+
+    static let chatIncomingBubble = Color.white
+    static let chatOutgoingBubble = Color(red: 141 / 255, green: 224 / 255, blue: 102 / 255)
+    static let chatTimestamp = Color.white.opacity(0.85)
+    static let chatDateSeparatorBackground = Color.black.opacity(0.22)
 }

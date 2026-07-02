@@ -16,41 +16,71 @@ final class AppViewModels {
     let profile: ProfileViewModel
     let chat: ChatViewModel
 
+    var shouldOpenSettingsNotifications = false
+
+    private let notificationCoordinator = NotificationCoordinator()
+
     init(dependencies: AppDependencies) {
-        let postRepository = dependencies.postRepository
-        let profileViewModel = ProfileViewModel(
-            authRepository: dependencies.authRepository,
-            postRepository: postRepository
-        )
+        let useCases = dependencies.useCases
+        let profileViewModel = AppViewModelFactory.profile(dependencies: dependencies)
+        let chatViewModel = AppViewModelFactory.chat(dependencies: dependencies)
 
-        let chatViewModel = ChatViewModel(chatRepository: dependencies.chatRepository)
-
-        map = MapViewModel(postRepository: postRepository)
-        post = PostViewModel(
-            postRepository: postRepository,
-            matchRepository: dependencies.matchRepository,
+        map = MapViewModel(
+            useCases: useCases,
             authRepository: dependencies.authRepository
         )
-        match = MatchViewModel(
-            postRepository: postRepository,
-            matchRepository: dependencies.matchRepository,
-            authRepository: dependencies.authRepository
-        )
+        post = PostViewModel(useCases: useCases)
+        match = AppViewModelFactory.match(dependencies: dependencies)
         profile = profileViewModel
         chat = chatViewModel
 
-        match.onMatched = { [weak chatViewModel] conversation in
-            await chatViewModel?.loadConversations()
-            _ = conversation
+        match.onMatched = { [weak self] conversation in
+            guard let self else { return }
+            await chatViewModel.handleMatch(conversation)
         }
 
-        Task {
-            await map.loadInitialCenter(from: dependencies.authRepository)
+        post.onMatched = { [weak self] conversation in
+            guard let self else { return }
+            await chatViewModel.handleMatch(conversation)
+            await openChat(for: conversation)
         }
 
-        post.onPostCreated = { [weak map] in
+        post.onPostCreated = { [weak map] createdPost in
+            map?.insertCreatedPost(createdPost)
             await map?.loadPosts()
             await profileViewModel.loadProfile()
         }
+
+        chat.onConversationVisibilityChanged = { [weak notificationCoordinator] conversationID in
+            notificationCoordinator?.setOpenConversationID(conversationID)
+        }
+
+        notificationCoordinator.onOpenChat = { [weak self] conversationID in
+            Task { @MainActor in
+                await self?.openChat(conversationID: conversationID)
+            }
+        }
+
+        notificationCoordinator.onOpenNotifications = { [weak self] in
+            self?.shouldOpenSettingsNotifications = true
+        }
+
+        notificationCoordinator.start()
+    }
+
+    func openChat(for conversation: ChatConversation) async {
+        await chat.loadConversations()
+        match.isChatPresented = true
+        chat.conversationToOpen = conversation
+    }
+
+    func openChat(conversationID: String) async {
+        await chat.loadConversations()
+        guard let conversation = chat.conversations.first(where: { $0.id == conversationID }) else { return }
+        await openChat(for: conversation)
+    }
+
+    func clearSettingsNotificationsRequest() {
+        shouldOpenSettingsNotifications = false
     }
 }

@@ -113,6 +113,7 @@ enum AppSize {
     static let createPostBodyFieldMinHeight: CGFloat = 200
     static let createPostSubmitHeight: CGFloat = 48
     static let postDetailImageHeightRatio: CGFloat = 0.46
+    static var createPostPhotoMaxHeight: CGFloat { postCardHeight * postDetailImageHeightRatio }
     static let profileHeaderHeightRatio: CGFloat = 0.4
     static let profileGridColumns: Int = 3
     static let profileAvatar: CGFloat = 100
@@ -126,4 +127,9 @@ enum AppSize {
     static let authSocialButtonHeight: CGFloat = 48
     static let authLogoSize: CGFloat = 96
     static let authNavLogoSize: CGFloat = 32
+
+    // chat
+    static let chatAvatar: CGFloat = 40
+    static let chatBubbleRadius: CGFloat = 18
+    static let chatBubbleTailRadius: CGFloat = 4
 }

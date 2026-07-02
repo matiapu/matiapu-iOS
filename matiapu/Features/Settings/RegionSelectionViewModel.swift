@@ -22,7 +22,12 @@ final class RegionSelectionViewModel {
 
     let prefectures = Prefecture.all
     private let catalog = MunicipalityStore.shared
+    private let searchPostalCode: SearchPostalCodeUseCase
     private var postalCodeSearchTask: Task<Void, Never>?
+
+    init(searchPostalCode: SearchPostalCodeUseCase) {
+        self.searchPostalCode = searchPostalCode
+    }
 
     func filteredPrefectures(matching query: String) -> [Prefecture] {
         let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -76,7 +81,7 @@ final class RegionSelectionViewModel {
         defer { isSearchingPostalCode = false }
 
         do {
-            postalCodeResults = try await PostalCodeLookup.search(postalCode: query)
+            postalCodeResults = try await searchPostalCode.execute(postalCode: query)
             postalCodeMessage = nil
         } catch let error as PostalCodeLookupError {
             postalCodeResults = []
@@ -91,7 +96,7 @@ final class RegionSelectionViewModel {
 #if DEBUG
 extension RegionSelectionViewModel {
     static var preview: RegionSelectionViewModel {
-        RegionSelectionViewModel()
+        RegionSelectionViewModel(searchPostalCode: SearchPostalCodeUseCase())
     }
 }
 #endif

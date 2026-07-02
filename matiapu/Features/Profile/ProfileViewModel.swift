@@ -13,30 +13,38 @@ final class ProfileViewModel {
     private(set) var posts: [Post] = []
     private(set) var isLoading = false
 
-    private let authRepository: any AuthRepository
-    private let postRepository: any PostRepository
+    private let loadUserProfile: LoadUserProfileUseCase
+    private let manageAccount: ManageAccountUseCase
+    private var hasLoadedOnce = false
 
-    init(
-        authRepository: any AuthRepository,
-        postRepository: any PostRepository
-    ) {
-        self.authRepository = authRepository
-        self.postRepository = postRepository
+    init(loadUserProfile: LoadUserProfileUseCase, manageAccount: ManageAccountUseCase) {
+        self.loadUserProfile = loadUserProfile
+        self.manageAccount = manageAccount
+    }
+
+    func loadProfileIfNeeded() async {
+        guard !hasLoadedOnce else { return }
+        await loadProfile()
     }
 
     func loadProfile() async {
         isLoading = true
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+            hasLoadedOnce = true
+        }
 
-        profile = try? await authRepository.fetchCurrentUser()
-        posts = (try? await postRepository.fetchUserPosts()) ?? []
+        guard let snapshot = try? await loadUserProfile.execute() else { return }
+        profile = snapshot.profile
+        posts = snapshot.posts
     }
 
     func signOut() {
         Task {
-            try? await authRepository.signOut()
+            try? await manageAccount.signOut()
             profile = nil
             posts = []
+            hasLoadedOnce = false
         }
     }
 }
@@ -44,9 +52,13 @@ final class ProfileViewModel {
 #if DEBUG
 extension ProfileViewModel {
     static var preview: ProfileViewModel {
+        let manageAccount = ManageAccountUseCase(authRepository: MockAuthRepository())
         let viewModel = ProfileViewModel(
-            authRepository: MockAuthRepository(),
-            postRepository: MockPostRepository()
+            loadUserProfile: LoadUserProfileUseCase(
+                manageAccount: manageAccount,
+                postRepository: MockPostRepository()
+            ),
+            manageAccount: manageAccount
         )
         viewModel.profile = UserProfile(
             displayName: "ユーザー名ユーザー名",
