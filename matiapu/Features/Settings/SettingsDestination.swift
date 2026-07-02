@@ -14,4 +14,8 @@ enum SettingsDestination: Hashable {
     case likedPosts
     case notifications
     case notificationDetail(notificationId: String)
+    case qaList
+    case qaDetail(questionId: String)
+    case signOutConfirmation
+    case deleteAccountConfirmation
 }
