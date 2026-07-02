@@ -8,18 +8,35 @@ import SwiftUI
 struct MapView: View {
     @Bindable var viewModel: MapViewModel
     @Bindable var postViewModel: PostViewModel
-    @State private var isMapReady = false
+    var isLocationTrackingEnabled = true
+    @Environment(\.appDependencies) private var dependencies
+    @State private var hasLoadedInitial = false
 
     var body: some View {
         ZStack(alignment: .top) {
-            if isMapReady {
+            if let mapCenter = viewModel.mapCenter {
                 GoogleMapView(
                     posts: viewModel.posts,
-                    mapCenter: viewModel.mapCenter,
+                    shelters: viewModel.shelters,
+                    disasters: viewModel.disasters,
+                    mapCenter: mapCenter,
+                    municipalityScope: viewModel.municipalityScope,
                     selectedPostID: viewModel.selectedPost?.id,
-                    onMarkerTap: viewModel.selectPost,
-                    onMapTap: viewModel.dismissSelectedPost
+                    selectedShelterID: viewModel.selectedShelter?.id,
+                    isLocationTrackingEnabled: isLocationTrackingEnabled,
+                    onPostTap: viewModel.selectPost,
+                    onShelterTap: viewModel.selectShelter,
+                    onMapTap: viewModel.dismissMapSelection
                 )
+                .ignoresSafeArea()
+            } else if hasLoadedInitial, let centerErrorMessage = viewModel.centerErrorMessage {
+                ContentUnavailableView(
+                    centerErrorMessage,
+                    systemImage: "map",
+                    description: Text("設定画面から登録地域を確認してください。")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(AppColors.postScreenBackgroundGradient)
                 .ignoresSafeArea()
             } else {
                 AppColors.postScreenBackgroundGradient
@@ -45,16 +62,22 @@ struct MapView: View {
                         onOpenDetail: viewModel.openDetail
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else if let selectedShelter = viewModel.selectedShelter {
+                    MapShelterCalloutView(shelter: selectedShelter)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .padding(.horizontal, AppSpacing.screenHorizontal)
             .animation(.easeInOut(duration: 0.2), value: viewModel.selectedPost?.id)
+            .animation(.easeInOut(duration: 0.2), value: viewModel.selectedShelter?.id)
         }
         .sheet(item: $viewModel.detailPost) { post in
-            PostDetailView(post: post, display: .postDetail)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(AppRadius.postDetailSheet)
+            if let dependencies {
+                PostDetailView(post: post, display: .postDetail, dependencies: dependencies)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+                    .presentationCornerRadius(AppRadius.postDetailSheet)
+            }
         }
         .fullScreenCover(isPresented: cameraPresentation) {
             CameraImagePicker(
@@ -64,10 +87,10 @@ struct MapView: View {
             .ignoresSafeArea()
         }
         .task {
-            isMapReady = true
             async let posts: Void = viewModel.loadPosts()
-            async let location: Void = viewModel.requestUserLocationAndCenter()
-            _ = await (posts, location)
+            async let center: Void = viewModel.loadInitialCenter()
+            _ = await (posts, center)
+            hasLoadedInitial = true
         }
     }
 
@@ -183,7 +206,10 @@ struct MapView: View {
 
 #Preview {
     MapView(
-        viewModel: MapViewModel(postRepository: MockPostRepository()),
+        viewModel: MapViewModel(
+            useCases: AppUseCases.make(from: .live),
+            authRepository: MockAuthRepository()
+        ),
         postViewModel: .preview
     )
 }

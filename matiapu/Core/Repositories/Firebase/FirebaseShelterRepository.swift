@@ -6,14 +6,6 @@
 import FirebaseFirestore
 import Foundation
 
-protocol ShelterRepository: Sendable {
-    func createShelter(_ input: CreateShelterInput) async throws -> Shelter
-    func getShelter(shelterId: String) async throws -> Shelter
-    func updateShelter(shelterId: String, input: CreateShelterInput) async throws
-    func deleteShelter(shelterId: String) async throws
-    func getShelters() async throws -> [Shelter]
-}
-
 final class FirebaseShelterRepository: ShelterRepository, @unchecked Sendable {
     private let db = Firestore.firestore()
 
@@ -30,7 +22,8 @@ final class FirebaseShelterRepository: ShelterRepository, @unchecked Sendable {
             shelterName: input.shelterName,
             latitude: input.latitude,
             longitude: input.longitude,
-            capacity: input.capacity
+            capacity: input.capacity,
+            municipality: nil
         )
     }
 
@@ -54,7 +47,14 @@ final class FirebaseShelterRepository: ShelterRepository, @unchecked Sendable {
         try await db.collection(FirestoreCollections.shelters).document(shelterId).delete()
     }
 
-    func getShelters() async throws -> [Shelter] {
+    func getShelters(municipality: String?) async throws -> [Shelter] {
+        if let municipality, !municipality.isEmpty {
+            let snapshot = try await db.collection(FirestoreCollections.shelters)
+                .whereField("municipality", isEqualTo: municipality)
+                .getDocuments()
+            return snapshot.documents.compactMap { mapShelter(id: $0.documentID, data: $0.data()) }
+        }
+
         let snapshot = try await db.collection(FirestoreCollections.shelters).getDocuments()
         return snapshot.documents.compactMap { mapShelter(id: $0.documentID, data: $0.data()) }
     }
@@ -72,7 +72,8 @@ final class FirebaseShelterRepository: ShelterRepository, @unchecked Sendable {
             shelterName: shelterName,
             latitude: location.latitude,
             longitude: location.longitude,
-            capacity: data["capacity"] as? Int
+            capacity: data["capacity"] as? Int,
+            municipality: data["municipality"] as? String
         )
     }
 }

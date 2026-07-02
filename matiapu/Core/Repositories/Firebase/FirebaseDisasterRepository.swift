@@ -3,16 +3,9 @@
 //  matiapu
 //
 
+import CoreLocation
 import FirebaseFirestore
 import Foundation
-
-protocol DisasterRepository: Sendable {
-    func createDisaster(_ input: CreateDisasterInput) async throws -> Disaster
-    func getDisaster(disasterId: String) async throws -> Disaster
-    func updateDisaster(disasterId: String, input: CreateDisasterInput) async throws
-    func deleteDisaster(disasterId: String) async throws
-    func getDisasters() async throws -> [Disaster]
-}
 
 final class FirebaseDisasterRepository: DisasterRepository, @unchecked Sendable {
     private let db = Firestore.firestore()
@@ -56,11 +49,19 @@ final class FirebaseDisasterRepository: DisasterRepository, @unchecked Sendable 
         try await db.collection(FirestoreCollections.disasters).document(disasterId).delete()
     }
 
-    func getDisasters() async throws -> [Disaster] {
+    func getDisasters(within bounds: MunicipalityBounds?) async throws -> [Disaster] {
         let snapshot = try await db.collection(FirestoreCollections.disasters)
             .order(by: "occurred_at", descending: true)
             .getDocuments()
-        return snapshot.documents.compactMap { mapDisaster(id: $0.documentID, data: $0.data()) }
+        let disasters = snapshot.documents.compactMap { mapDisaster(id: $0.documentID, data: $0.data()) }
+        return disasters.filter { disaster in
+            guard let bounds else { return true }
+            return disaster.dangerZone.contains { point in
+                bounds.contains(
+                    CLLocationCoordinate2D(latitude: point.latitude, longitude: point.longitude)
+                )
+            }
+        }
     }
 
     private func mapDisaster(id: String, data: [String: Any]) -> Disaster? {

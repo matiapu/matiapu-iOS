@@ -28,6 +28,7 @@ final class LocationCaptureService: NSObject {
             manager.requestWhenInUseAuthorization()
         case .authorizedWhenInUse, .authorizedAlways:
             manager.startUpdatingLocation()
+            manager.requestLocation()
         default:
             break
         }
@@ -41,10 +42,23 @@ final class LocationCaptureService: NSObject {
         latestLocation?.coordinate
     }
 
-    func waitForLocation(timeout: TimeInterval = 3) async -> CLLocationCoordinate2D? {
+    var isLocationAuthorized: Bool {
+        switch authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            return true
+        default:
+            return false
+        }
+    }
+
+    func waitForLocation(timeout: TimeInterval = 12) async -> CLLocationCoordinate2D? {
         if let currentCoordinate {
             return currentCoordinate
         }
+
+        guard isLocationAuthorized else { return nil }
+
+        prepareForCapture()
 
         let clock = ContinuousClock()
         let deadline = clock.now + .seconds(timeout)
@@ -58,6 +72,21 @@ final class LocationCaptureService: NSObject {
 
         return currentCoordinate
     }
+
+    func acquireCoordinate(
+        photoCoordinate: CLLocationCoordinate2D?,
+        timeout: TimeInterval = 12
+    ) async -> PostLocation? {
+        if let photoCoordinate {
+            return PostLocation(coordinate: photoCoordinate)
+        }
+
+        guard let deviceCoordinate = await waitForLocation(timeout: timeout) else {
+            return nil
+        }
+
+        return PostLocation(coordinate: deviceCoordinate)
+    }
 }
 
 extension LocationCaptureService: CLLocationManagerDelegate {
@@ -68,6 +97,7 @@ extension LocationCaptureService: CLLocationManagerDelegate {
             switch authorizationStatus {
             case .authorizedWhenInUse, .authorizedAlways:
                 manager.startUpdatingLocation()
+                manager.requestLocation()
             default:
                 manager.stopUpdatingLocation()
             }
@@ -84,23 +114,6 @@ extension LocationCaptureService: CLLocationManagerDelegate {
     }
 
     nonisolated func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // 位置情報取得失敗時は写真EXIFのみにフォールバックする
-    }
-}
-
-enum PostLocationResolver {
-    static func resolve(
-        photoCoordinate: CLLocationCoordinate2D?,
-        deviceCoordinate: CLLocationCoordinate2D?
-    ) -> PostLocation? {
-        if let photoCoordinate {
-            return PostLocation(coordinate: photoCoordinate)
-        }
-
-        if let deviceCoordinate {
-            return PostLocation(coordinate: deviceCoordinate)
-        }
-
-        return nil
+        // 位置情報取得失敗時は継続的な更新で再取得を試みる
     }
 }
