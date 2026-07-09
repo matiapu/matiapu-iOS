@@ -7,9 +7,10 @@ import SwiftUI
 
 struct LegislatorProfileRegistrationView: View {
     @Bindable var viewModel: ProfileRegistrationViewModel
+    let onBack: () -> Void
 
     var body: some View {
-        ProfileRegistrationLayout(role: .legislator, currentStep: 2) {
+        ProfileRegistrationLayout(role: .legislator, currentStep: 2, onBack: onBack) {
             ProfileImagePickerSection(selectedImage: $viewModel.profileImage)
 
             HStack(spacing: 12) {
@@ -71,6 +72,7 @@ struct LegislatorProfileRegistrationView: View {
         viewModel: ProfileRegistrationViewModel(
             completeProfile: CompleteProfileUseCase(authRepository: MockAuthRepository()),
             role: .legislator
-        )
+        ),
+        onBack: {}
     )
 }

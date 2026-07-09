@@ -114,10 +114,11 @@ final class AuthViewModel {
         }
     }
 
-    func resendVerificationEmail() async {
+    func resendVerificationEmail() async -> Bool {
         await perform {
             try await manageAccount.sendEmailVerification()
         }
+        return errorMessage == nil
     }
 
     func verifyEmail() async -> Bool {

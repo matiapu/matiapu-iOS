@@ -8,10 +8,11 @@ import SwiftUI
 struct ProfileRegistrationLayout<Content: View>: View {
     let role: UserRole
     let currentStep: Int
+    var onBack: (() -> Void)?
     @ViewBuilder let content: () -> Content
 
     var body: some View {
-        AuthScreenLayout {
+        AuthScreenLayout(onBack: onBack) {
             VStack(spacing: 0) {
                 RegistrationStepIndicator(currentStep: currentStep)
 

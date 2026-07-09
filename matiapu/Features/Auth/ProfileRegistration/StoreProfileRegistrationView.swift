@@ -7,9 +7,10 @@ import SwiftUI
 
 struct StoreProfileRegistrationView: View {
     @Bindable var viewModel: ProfileRegistrationViewModel
+    let onBack: () -> Void
 
     var body: some View {
-        ProfileRegistrationLayout(role: .store, currentStep: 2) {
+        ProfileRegistrationLayout(role: .store, currentStep: 2, onBack: onBack) {
             ProfileImagePickerSection(selectedImage: $viewModel.profileImage)
 
             ProfileTextField(
@@ -66,6 +67,7 @@ struct StoreProfileRegistrationView: View {
         viewModel: ProfileRegistrationViewModel(
             completeProfile: CompleteProfileUseCase(authRepository: MockAuthRepository()),
             role: .store
-        )
+        ),
+        onBack: {}
     )
 }

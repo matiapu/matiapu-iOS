@@ -7,10 +7,11 @@ import SwiftUI
 
 struct AccountTypeSelectionView: View {
     @Bindable var viewModel: ProfileRegistrationViewModel
+    let onBack: () -> Void
     let onSelected: () -> Void
 
     var body: some View {
-        ProfileRegistrationLayout(role: viewModel.role, currentStep: 2) {
+        ProfileRegistrationLayout(role: viewModel.role, currentStep: 2, onBack: onBack) {
             VStack(spacing: 12) {
                 Text("アカウント種別を選択してください")
                     .font(AppTypography.authBody)

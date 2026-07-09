@@ -7,10 +7,16 @@ import SwiftUI
 
 struct AuthScreenLayout<Content: View>: View {
     let showsTopBar: Bool
+    var onBack: (() -> Void)?
     @ViewBuilder let content: () -> Content
 
-    init(showsTopBar: Bool = true, @ViewBuilder content: @escaping () -> Content) {
+    init(
+        showsTopBar: Bool = true,
+        onBack: (() -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
         self.showsTopBar = showsTopBar
+        self.onBack = onBack
         self.content = content
     }
 
@@ -21,7 +27,7 @@ struct AuthScreenLayout<Content: View>: View {
 
             VStack(spacing: 0) {
                 if showsTopBar {
-                    AuthTopBar()
+                    AuthTopBar(onBack: onBack)
                 }
                 content()
             }
@@ -30,8 +36,20 @@ struct AuthScreenLayout<Content: View>: View {
 }
 
 struct AuthTopBar: View {
+    var onBack: (() -> Void)?
+
     var body: some View {
-        HStack {
+        HStack(spacing: 12) {
+            if let onBack {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppColors.authHeading)
+                        .frame(width: 32, height: 32)
+                }
+                .accessibilityLabel("戻る")
+            }
+
             AppBrandMark()
 
             Spacer()

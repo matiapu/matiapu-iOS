@@ -38,9 +38,13 @@ struct ProfileRegistrationFlowView: View {
                     authViewModel.markProfileRegistrationComplete()
                 }
             } else if showsAccountTypeSelection {
-                AccountTypeSelectionView(viewModel: registrationViewModel) {
-                    showsAccountTypeSelection = false
-                }
+                AccountTypeSelectionView(
+                    viewModel: registrationViewModel,
+                    onBack: backToLogin,
+                    onSelected: {
+                        showsAccountTypeSelection = false
+                    }
+                )
             } else {
                 registrationForm
             }
@@ -54,11 +58,32 @@ struct ProfileRegistrationFlowView: View {
     private var registrationForm: some View {
         switch registrationViewModel.role {
         case .citizen:
-            CitizenProfileRegistrationView(viewModel: registrationViewModel)
+            CitizenProfileRegistrationView(
+                viewModel: registrationViewModel,
+                onBack: backFromProfileForm
+            )
         case .store:
-            StoreProfileRegistrationView(viewModel: registrationViewModel)
+            StoreProfileRegistrationView(
+                viewModel: registrationViewModel,
+                onBack: backFromProfileForm
+            )
         case .legislator:
-            LegislatorProfileRegistrationView(viewModel: registrationViewModel)
+            LegislatorProfileRegistrationView(
+                viewModel: registrationViewModel,
+                onBack: backFromProfileForm
+            )
         }
+    }
+
+    private func backFromProfileForm() {
+        if needsAccountTypeSelection {
+            showsAccountTypeSelection = true
+        } else {
+            backToLogin()
+        }
+    }
+
+    private func backToLogin() {
+        Task { await authViewModel.signOut() }
     }
 }

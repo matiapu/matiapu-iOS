@@ -7,13 +7,14 @@ import SwiftUI
 
 struct CitizenProfileRegistrationView: View {
     @Bindable var viewModel: ProfileRegistrationViewModel
+    let onBack: () -> Void
 
     private let years = (1940...2010).map(String.init)
     private let months = (1...12).map(String.init)
     private let days = (1...31).map(String.init)
 
     var body: some View {
-        ProfileRegistrationLayout(role: .citizen, currentStep: 2) {
+        ProfileRegistrationLayout(role: .citizen, currentStep: 2, onBack: onBack) {
             ProfileImagePickerSection(selectedImage: $viewModel.profileImage)
 
             HStack(spacing: 12) {
@@ -116,5 +117,5 @@ struct CitizenProfileRegistrationView: View {
 }
 
 #Preview {
-    CitizenProfileRegistrationView(viewModel: .preview)
+    CitizenProfileRegistrationView(viewModel: .preview, onBack: {})
 }

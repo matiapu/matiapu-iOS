@@ -67,8 +67,7 @@ struct EmailVerificationView: View {
 
                         Button("認証メールを再送信") {
                             Task {
-                                await viewModel.resendVerificationEmail()
-                                didSendSuccess = true
+                                didSendSuccess = await viewModel.resendVerificationEmail()
                             }
                         }
                         .font(AppTypography.authLink)
