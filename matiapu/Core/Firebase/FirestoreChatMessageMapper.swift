@@ -7,8 +7,6 @@ import FirebaseFirestore
 import Foundation
 
 enum FirestoreChatMessageMapper {
-    static let undecryptableMessageText = "（メッセージを表示できません）"
-
     static func message(
         from document: QueryDocumentSnapshot,
         roomID: String,
@@ -30,10 +28,12 @@ enum FirestoreChatMessageMapper {
             keys: [
                 FirestoreFields.ChatMessage.senderID,
                 "senderId",
+                "sender_id",
             ]
         ) ?? ""
         let sentAt = FirestoreDateCodec.date(from: data[FirestoreFields.ChatMessage.createdAt])
             ?? FirestoreDateCodec.date(from: data["createdAt"])
+            ?? FirestoreDateCodec.date(from: data["created_at"])
             ?? .now
 
         return ChatMessage(
@@ -73,14 +73,14 @@ enum FirestoreChatMessageMapper {
             keys: [
                 FirestoreFields.ChatMessage.encryptedContent,
                 "encryptedContent",
+                "encrypted_content",
             ]
         )
         let iv = encodedStringValue(
             from: data,
             keys: [
                 FirestoreFields.ChatMessage.iv,
-                "last_message_iv",
-                "lastMessageIV",
+                "iv",
             ]
         )
 
@@ -92,22 +92,32 @@ enum FirestoreChatMessageMapper {
             ) {
                 return ResolvedMessageText(text: decrypted)
             }
-            return ResolvedMessageText(text: undecryptableMessageText)
+
+            if let plaintext = plaintextValue(from: data) {
+                return ResolvedMessageText(text: plaintext)
+            }
+
+            return ResolvedMessageText(text: ChatCrypto.undecryptableMessageText)
         }
 
-        if let plaintext = stringValue(
+        if let plaintext = plaintextValue(from: data) {
+            return ResolvedMessageText(text: plaintext)
+        }
+
+        return nil
+    }
+
+    private static func plaintextValue(from data: [String: Any]) -> String? {
+        stringValue(
             from: data,
             keys: [
                 "text",
                 "content",
                 "content_text",
                 "message",
+                "body",
             ]
-        ) {
-            return ResolvedMessageText(text: plaintext)
-        }
-
-        return nil
+        )
     }
 
     private static func stringValue(from data: [String: Any], keys: [String]) -> String? {
