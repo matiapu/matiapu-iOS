@@ -14,9 +14,14 @@ struct ResolveMunicipalityScopeUseCase: Sendable {
 
     @MainActor
     func execute() async -> MapMunicipalityScope? {
-        guard let profile = try? await authRepository.fetchCurrentUser() else { return nil }
+        let profile = (try? await authRepository.fetchCurrentUser())
+            ?? authRepository.cachedCurrentUser()
+        guard let profile else { return nil }
+
         let area = profile.registeredArea.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !area.isEmpty else { return nil }
-        return await MapMunicipalityScopeResolver.resolve(name: area)
+
+        let municipalityName = MunicipalityStore.shared.resolveMunicipalityName(from: area) ?? area
+        return await MapMunicipalityScopeResolver.resolve(name: municipalityName)
     }
 }

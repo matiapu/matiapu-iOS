@@ -24,11 +24,13 @@ enum MapMunicipalityScopeResolver {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        if let boundary = await MunicipalityBoundaryLoader.shared.loadBoundary(municipalityName: trimmed) {
-            return MapMunicipalityScope(name: trimmed, boundary: boundary)
+        let municipalityName = MunicipalityStore.shared.resolveMunicipalityName(from: trimmed) ?? trimmed
+
+        if let boundary = await MunicipalityBoundaryLoader.shared.loadBoundary(municipalityName: municipalityName) {
+            return MapMunicipalityScope(name: municipalityName, boundary: boundary)
         }
 
-        return await fallbackScope(name: trimmed)
+        return await fallbackScope(name: municipalityName)
     }
 
     @MainActor

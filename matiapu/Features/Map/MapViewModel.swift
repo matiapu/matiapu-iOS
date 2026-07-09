@@ -27,7 +27,6 @@ final class MapViewModel {
     private let fetchMapPosts: FetchMapPostsUseCase
     private let fetchMapOverlays: FetchMapOverlaysUseCase
     private let authRepository: any AuthRepository
-    private let coordinateResolver = RegionCoordinateResolver()
 
     init(useCases: AppUseCases, authRepository: any AuthRepository) {
         self.resolveMunicipalityScope = useCases.resolveMunicipalityScope
@@ -39,29 +38,15 @@ final class MapViewModel {
     /// ユーザーが設定した登録地域を地図の中心に据える。
     func loadInitialCenter() async {
         centerErrorMessage = nil
-        await loadMunicipalityScope()
+        await loadMunicipalityScope(force: true)
 
-        if let scope = municipalityScope {
-            mapCenter = scope.center
+        guard let scope = municipalityScope else {
+            centerErrorMessage = registeredAreaErrorMessage()
+            mapCenter = nil
             return
         }
 
-        guard let profile = try? await authRepository.fetchCurrentUser() else {
-            centerErrorMessage = "登録地域を取得できませんでした。"
-            return
-        }
-
-        let area = profile.registeredArea.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !area.isEmpty else {
-            centerErrorMessage = "登録地域が設定されていません。"
-            return
-        }
-
-        if let coordinate = await coordinateResolver.coordinate(for: area) {
-            mapCenter = coordinate
-        } else {
-            centerErrorMessage = "登録地域の位置情報を取得できませんでした。"
-        }
+        mapCenter = scope.center
     }
 
     func reloadMunicipalityScope() async {
@@ -107,9 +92,21 @@ final class MapViewModel {
         }
     }
 
-    private func loadMunicipalityScope() async {
-        guard municipalityScope == nil else { return }
+    private func loadMunicipalityScope(force: Bool = false) async {
+        if !force, municipalityScope != nil { return }
         municipalityScope = await resolveMunicipalityScope.execute()
+    }
+
+    /// スコープを解決できなかった理由に応じたエラーメッセージを返す。
+    private func registeredAreaErrorMessage() -> String {
+        guard let profile = authRepository.cachedCurrentUser() else {
+            return "登録地域を取得できませんでした。"
+        }
+        let area = profile.registeredArea.trimmingCharacters(in: .whitespacesAndNewlines)
+        if area.isEmpty {
+            return "登録地域が設定されていません。"
+        }
+        return "登録地域の位置情報を取得できませんでした。"
     }
 
     private func loadPostMarkers() async {
