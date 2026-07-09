@@ -43,6 +43,7 @@ enum FirestoreFields {
         static let storeDescription = "storeDescription"
         static let politicalParty = "politicalParty"
         static let manifesto = "manifesto"
+        static let fcmTokens = "fcmTokens"
     }
 
     enum Post {

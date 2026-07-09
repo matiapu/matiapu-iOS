@@ -6,6 +6,7 @@
 //
 
 import FirebaseCore
+import FirebaseMessaging
 import SwiftUI
 import UIKit
 
@@ -15,7 +16,27 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
-        true
+        guard FirebaseBootstrap.isConfigured else { return true }
+
+        // 通知タップのハンドリング（UNUserNotificationCenterDelegate）を早期に有効化
+        _ = PushNotificationService.shared
+        PushTokenRegistrar.shared.start()
+        application.registerForRemoteNotifications()
+        return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+    ) {
+        Messaging.messaging().apnsToken = deviceToken
+    }
+
+    func application(
+        _ application: UIApplication,
+        didFailToRegisterForRemoteNotificationsWithError error: Error
+    ) {
+        print("リモート通知の登録に失敗しました: \(error.localizedDescription)")
     }
 }
 

@@ -11,6 +11,7 @@
 		6716A7CB2FBEAE6D009EB2BC /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7CA2FBEAE6D009EB2BC /* FirebaseAuth */; };
 		6716A7CD2FBEAE6D009EB2BC /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7CC2FBEAE6D009EB2BC /* FirebaseFirestore */; };
 		6716A7CF2FBEAE6D009EB2BC /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7CE2FBEAE6D009EB2BC /* FirebaseStorage */; };
+		6716A7D12FBEAE6D009EB2BC /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 6716A7D02FBEAE6D009EB2BC /* FirebaseMessaging */; };
 		672EC4F72FBEB90000DA6FB7 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 672EC4F62FBEB90000DA6FB7 /* GoogleSignIn */; };
 		672EC4F92FBEB90000DA6FB7 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 672EC4F82FBEB90000DA6FB7 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
@@ -54,6 +55,7 @@
 				6701AEB82FC7CFA700A863D2 /* GoogleMaps in Frameworks */,
 				672EC4F72FBEB90000DA6FB7 /* GoogleSignIn in Frameworks */,
 				6716A7CD2FBEAE6D009EB2BC /* FirebaseFirestore in Frameworks */,
+				6716A7D12FBEAE6D009EB2BC /* FirebaseMessaging in Frameworks */,
 				6716A7CF2FBEAE6D009EB2BC /* FirebaseStorage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -109,6 +111,7 @@
 			packageProductDependencies = (
 				6716A7CA2FBEAE6D009EB2BC /* FirebaseAuth */,
 				6716A7CC2FBEAE6D009EB2BC /* FirebaseFirestore */,
+				6716A7D02FBEAE6D009EB2BC /* FirebaseMessaging */,
 				6716A7CE2FBEAE6D009EB2BC /* FirebaseStorage */,
 				672EC4F62FBEB90000DA6FB7 /* GoogleSignIn */,
 				672EC4F82FBEB90000DA6FB7 /* GoogleSignInSwift */,
@@ -357,7 +360,8 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = matiapu/matiapu.entitlements;
+				CODE_SIGN_ENTITLEMENTS = "matiapu/matiapu-Debug.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K3BSAX58ZG;
@@ -378,6 +382,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.minato.matiapu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -395,6 +400,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = matiapu/matiapu.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K3BSAX58ZG;
@@ -415,6 +421,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.minato.matiapu;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -556,6 +563,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6716A7C92FBEAE6D009EB2BC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		6716A7D02FBEAE6D009EB2BC /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6716A7C92FBEAE6D009EB2BC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 		672EC4F62FBEB90000DA6FB7 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;

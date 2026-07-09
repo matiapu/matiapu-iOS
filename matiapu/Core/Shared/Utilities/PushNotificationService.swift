@@ -6,10 +6,10 @@
 import Foundation
 import UserNotifications
 
-enum PushNotificationUserInfoKey {
-    static let kind = "notification_kind"
-    static let relatedID = "notification_related_id"
-    static let notificationID = "notification_id"
+enum PushNotificationUserInfoKey: Sendable {
+    nonisolated static let kind = "notification_kind"
+    nonisolated static let relatedID = "notification_related_id"
+    nonisolated static let notificationID = "notification_id"
 }
 
 struct PushNotificationPayload: Sendable {
@@ -84,7 +84,13 @@ final class PushNotificationService: NSObject, UNUserNotificationCenterDelegate 
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {
-        [.banner, .sound, .badge]
+        // フォアグラウンド中は Firestore リスナー経由のローカル通知が表示されるため、
+        // FCM からのリモート通知は表示せず二重通知を防ぐ
+        let userInfo = notification.request.content.userInfo
+        if userInfo["gcm.message_id"] != nil {
+            return []
+        }
+        return [.banner, .sound, .badge]
     }
 
     nonisolated func userNotificationCenter(
@@ -92,22 +98,22 @@ final class PushNotificationService: NSObject, UNUserNotificationCenterDelegate 
         didReceive response: UNNotificationResponse
     ) async {
         let userInfo = response.notification.request.content.userInfo
-        guard
-            let kindRaw = userInfo[PushNotificationUserInfoKey.kind] as? String,
-            let kind = AppNotificationKind(rawValue: kindRaw)
-        else {
-            return
-        }
-
-        let payload = PushNotificationPayload(
-            id: userInfo[PushNotificationUserInfoKey.notificationID] as? String ?? UUID().uuidString,
-            kind: kind,
-            title: response.notification.request.content.title,
-            body: response.notification.request.content.body,
-            relatedID: userInfo[PushNotificationUserInfoKey.relatedID] as? String
-        )
+        let kindRaw = userInfo[PushNotificationUserInfoKey.kind] as? String
+        let notificationID = userInfo[PushNotificationUserInfoKey.notificationID] as? String
+        let relatedID = userInfo[PushNotificationUserInfoKey.relatedID] as? String
+        let title = response.notification.request.content.title
+        let body = response.notification.request.content.body
 
         await MainActor.run {
+            guard let kindRaw, let kind = AppNotificationKind(rawValue: kindRaw) else { return }
+
+            let payload = PushNotificationPayload(
+                id: notificationID ?? UUID().uuidString,
+                kind: kind,
+                title: title,
+                body: body,
+                relatedID: relatedID
+            )
             PushNotificationService.shared.onNotificationTapped?(payload)
         }
     }
