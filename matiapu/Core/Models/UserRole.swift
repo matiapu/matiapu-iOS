@@ -5,7 +5,7 @@
 
 import Foundation
 
-enum UserRole: String, Hashable, CaseIterable, Identifiable {
+enum UserRole: String, Hashable, CaseIterable, Identifiable, Codable {
     case citizen
     case store
     case legislator

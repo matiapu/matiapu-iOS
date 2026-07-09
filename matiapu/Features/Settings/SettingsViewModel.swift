@@ -21,12 +21,24 @@ final class SettingsViewModel {
     init(useCases: AppUseCases) {
         self.manageAccount = useCases.manageAccount
         self.fetchNotifications = useCases.fetchNotifications
+        profile = useCases.manageAccount.cachedCurrentUser()
     }
 
-    func loadProfile() async {
-        isLoading = true
+    func syncProfileFromCache() {
+        if let cached = manageAccount.cachedCurrentUser() {
+            profile = cached
+        }
+    }
+
+    func loadProfile(forceRefresh: Bool = false) async {
+        syncProfileFromCache()
+        if profile == nil {
+            isLoading = true
+        }
         defer { isLoading = false }
-        profile = try? await manageAccount.fetchCurrentUser()
+        if let fetched = try? await manageAccount.fetchCurrentUser(forceRefresh: forceRefresh) {
+            profile = fetched
+        }
         await loadUnreadNotificationCount()
     }
 
@@ -37,17 +49,22 @@ final class SettingsViewModel {
 
     func updateDisplayName(_ name: String) async throws {
         try await manageAccount.updateDisplayName(name)
-        await loadProfile()
+        syncProfileFromCache()
     }
 
     func updateRegisteredArea(_ area: String) async throws {
         try await manageAccount.updateRegisteredArea(area)
-        await loadProfile()
+        syncProfileFromCache()
+
+        // オンラインのうちに境界データを永続化し、オフラインでも地図の枠を出せるようにする
+        Task.detached(priority: .utility) {
+            await MunicipalityBoundaryLoader.shared.prefetchBoundary(municipalityName: area)
+        }
     }
 
     func updateEmail(_ email: String) async throws {
         try await manageAccount.updateEmail(email)
-        await loadProfile()
+        syncProfileFromCache()
     }
 
     func updatePassword(_ password: String) async throws {

@@ -9,7 +9,8 @@ protocol AuthRepository: Sendable {
     var isAuthenticated: Bool { get }
     var pendingVerificationDisplayName: String? { get }
 
-    func fetchCurrentUser() async throws -> UserProfile
+    func fetchCurrentUser(forceRefresh: Bool) async throws -> UserProfile
+    func cachedCurrentUser() -> UserProfile?
     func fetchUserPosts() async throws -> [ProfilePostItem]
     func fetchPublicProfiles(userIDs: [String]) async throws -> [String: UserPublicProfile]
     func updateDisplayName(_ name: String) async throws
@@ -33,6 +34,12 @@ protocol AuthRepository: Sendable {
 extension AuthRepository {
     var isAuthenticated: Bool { false }
     var pendingVerificationDisplayName: String? { nil }
+
+    func fetchCurrentUser() async throws -> UserProfile {
+        try await fetchCurrentUser(forceRefresh: false)
+    }
+
+    func cachedCurrentUser() -> UserProfile? { nil }
 
     func signIn(email: String, password: String) async throws {
         throw AuthError.unknown("この環境ではログインできません。")
@@ -87,9 +94,13 @@ final class MockAuthRepository: AuthRepository, @unchecked Sendable {
         locked { isSignedIn }
     }
 
-    func fetchCurrentUser() async throws -> UserProfile {
+    func fetchCurrentUser(forceRefresh: Bool) async throws -> UserProfile {
         guard locked({ isSignedIn }) else { throw AuthError.notAuthenticated }
         return locked { currentUser }
+    }
+
+    func cachedCurrentUser() -> UserProfile? {
+        locked { isSignedIn ? currentUser : nil }
     }
 
     func fetchUserPosts() async throws -> [ProfilePostItem] {

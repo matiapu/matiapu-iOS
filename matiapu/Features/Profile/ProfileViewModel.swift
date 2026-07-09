@@ -20,21 +20,32 @@ final class ProfileViewModel {
     init(loadUserProfile: LoadUserProfileUseCase, manageAccount: ManageAccountUseCase) {
         self.loadUserProfile = loadUserProfile
         self.manageAccount = manageAccount
+        profile = manageAccount.cachedCurrentUser()
+    }
+
+    func syncProfileFromCache() {
+        if let cached = manageAccount.cachedCurrentUser() {
+            profile = cached
+        }
     }
 
     func loadProfileIfNeeded() async {
+        syncProfileFromCache()
         guard !hasLoadedOnce else { return }
         await loadProfile()
     }
 
-    func loadProfile() async {
-        isLoading = true
+    func loadProfile(forceRefresh: Bool = false) async {
+        syncProfileFromCache()
+        if profile == nil {
+            isLoading = true
+        }
         defer {
             isLoading = false
             hasLoadedOnce = true
         }
 
-        guard let snapshot = try? await loadUserProfile.execute() else { return }
+        guard let snapshot = try? await loadUserProfile.execute(forceRefresh: forceRefresh) else { return }
         profile = snapshot.profile
         posts = snapshot.posts
     }

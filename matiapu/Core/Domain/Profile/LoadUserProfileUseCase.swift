@@ -19,12 +19,9 @@ struct LoadUserProfileUseCase: Sendable {
         self.postRepository = postRepository
     }
 
-    func execute() async throws -> UserProfileSnapshot {
-        async let profileTask = manageAccount.fetchCurrentUser()
-        async let postsTask = postRepository.fetchUserPosts()
-        return UserProfileSnapshot(
-            profile: try await profileTask,
-            posts: try await postsTask
-        )
+    func execute(forceRefresh: Bool = false) async throws -> UserProfileSnapshot {
+        let profile = try await manageAccount.fetchCurrentUser(forceRefresh: forceRefresh)
+        let posts = (try? await postRepository.fetchUserPosts()) ?? []
+        return UserProfileSnapshot(profile: profile, posts: posts)
     }
 }

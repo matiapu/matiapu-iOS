@@ -35,7 +35,7 @@ struct ProfileView: View {
                     .scrollIndicators(.hidden)
                     .scrollContentBackground(.hidden)
                     .refreshable {
-                        await viewModel.loadProfile()
+                        await viewModel.loadProfile(forceRefresh: true)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -51,6 +51,7 @@ struct ProfileView: View {
                 .presentationCornerRadius(AppRadius.postDetailSheet)
         }
         .fullScreenCover(isPresented: $showsSettings, onDismiss: {
+            viewModel.syncProfileFromCache()
             Task { await viewModel.loadProfile() }
             onRegisteredAreaChanged()
             openNotificationsOnAppear = false

@@ -130,6 +130,7 @@ struct SettingsFlowView: View {
   }
 
   private func resetNavigation() {
+    settingsViewModel.syncProfileFromCache()
     navigationPath = NavigationPath()
   }
 }

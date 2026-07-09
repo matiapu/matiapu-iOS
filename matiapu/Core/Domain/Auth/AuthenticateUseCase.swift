@@ -49,8 +49,12 @@ struct ManageAccountUseCase: Sendable {
         self.authRepository = authRepository
     }
 
-    func fetchCurrentUser() async throws -> UserProfile {
-        try await authRepository.fetchCurrentUser()
+    func fetchCurrentUser(forceRefresh: Bool = false) async throws -> UserProfile {
+        try await authRepository.fetchCurrentUser(forceRefresh: forceRefresh)
+    }
+
+    func cachedCurrentUser() -> UserProfile? {
+        authRepository.cachedCurrentUser()
     }
 
     func signOut() async throws {

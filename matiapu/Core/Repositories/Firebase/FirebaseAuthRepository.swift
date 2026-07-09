@@ -13,6 +13,8 @@ import UIKit
 final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
     private let db = Firestore.firestore()
     private let storage = Storage.storage()
+    private let profileStore = LocalUserProfileStore.shared
+    private let cachedProfile = OSAllocatedUnfairLock<UserProfile?>(initialState: nil)
     private let verificationDisplayName = OSAllocatedUnfairLock<String?>(initialState: nil)
 
     var isAuthenticated: Bool {
@@ -24,7 +26,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         verificationDisplayName.withLock { $0 }
     }
 
-    func fetchCurrentUser() async throws -> UserProfile {
+    func fetchCurrentUser(forceRefresh: Bool) async throws -> UserProfile {
         let uid = try await FirebaseAuthSession.ensureSignedIn()
         guard let user = FirebaseAuthSession.currentUser else {
             throw AuthError.notAuthenticated
@@ -33,6 +35,44 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
             throw AuthError.emailNotVerified
         }
 
+        if !forceRefresh, let cached = cachedProfile(for: uid) {
+            return cached
+        }
+
+        let profile = try await fetchProfileFromFirestore(uid: uid, user: user)
+        storeCachedProfile(profile)
+        return profile
+    }
+
+    func cachedCurrentUser() -> UserProfile? {
+        guard let uid = FirebaseAuthSession.currentUser?.uid else { return nil }
+        return cachedProfile(for: uid)
+    }
+
+    private func cachedProfile(for uid: String) -> UserProfile? {
+        if let memory = cachedProfile.withLock({ $0 }), memory.id == uid {
+            return memory
+        }
+        if let disk = profileStore.load(uid: uid) {
+            cachedProfile.withLock { $0 = disk }
+            return disk
+        }
+        return nil
+    }
+
+    private func storeCachedProfile(_ profile: UserProfile) {
+        cachedProfile.withLock { $0 = profile }
+        profileStore.save(profile)
+    }
+
+    private func clearCachedProfile() {
+        if let uid = cachedProfile.withLock({ $0?.id }) {
+            profileStore.remove(uid: uid)
+        }
+        cachedProfile.withLock { $0 = nil }
+    }
+
+    private func fetchProfileFromFirestore(uid: String, user: User) async throws -> UserProfile {
         let document = try await db.collection(FirestoreCollections.users).document(uid).getDocument()
         if let data = document.data() {
             return FirestoreUserMapper.profile(from: data, uid: uid)
@@ -42,6 +82,15 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         let defaultData = FirestoreUserMapper.defaultProfile(uid: uid, email: email)
         try await db.collection(FirestoreCollections.users).document(uid).setData(defaultData, merge: true)
         return FirestoreUserMapper.profile(from: defaultData, uid: uid)
+    }
+
+    private func refreshCachedProfile() async throws {
+        let uid = try await FirebaseAuthSession.ensureSignedIn()
+        guard let user = FirebaseAuthSession.currentUser else {
+            throw AuthError.notAuthenticated
+        }
+        let profile = try await fetchProfileFromFirestore(uid: uid, user: user)
+        storeCachedProfile(profile)
     }
 
     func fetchUserPosts() async throws -> [ProfilePostItem] {
@@ -91,11 +140,18 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         }
     }
 
+    private func patchCachedProfile(_ transform: (UserProfile) -> UserProfile) {
+        guard let uid = FirebaseAuthSession.currentUser?.uid,
+              let current = cachedProfile(for: uid) else { return }
+        storeCachedProfile(transform(current))
+    }
+
     func updateDisplayName(_ name: String) async throws {
         let uid = try await FirebaseAuthSession.ensureSignedIn()
         try await db.collection(FirestoreCollections.users)
             .document(uid)
             .setData(FirestoreUserMapper.displayNameUpdate(name), merge: true)
+        patchCachedProfile { $0.updating(displayName: name, nickname: name) }
     }
 
     func updateRegisteredArea(_ area: String) async throws {
@@ -103,6 +159,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         try await db.collection(FirestoreCollections.users)
             .document(uid)
             .setData(FirestoreUserMapper.registeredAreaUpdate(area), merge: true)
+        patchCachedProfile { $0.updatingRegisteredArea(area) }
     }
 
     func updateEmail(_ email: String) async throws {
@@ -110,6 +167,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         try await db.collection(FirestoreCollections.users)
             .document(uid)
             .setData(FirestoreUserMapper.emailUpdate(email), merge: true)
+        patchCachedProfile { $0.updating(email: email) }
     }
 
     func updatePassword(_ password: String) async throws {
@@ -122,6 +180,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
     func signOut() async throws {
         try Auth.auth().signOut()
         verificationDisplayName.withLock { $0 = nil }
+        clearCachedProfile()
     }
 
     func deleteAccount() async throws {
@@ -135,12 +194,14 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
             try? await storage.reference().child("users/\(uid)/profile.jpg").delete()
             try await user.delete()
             clearPendingVerification()
+            clearCachedProfile()
         } catch {
             throw FirebaseAuthErrorMapper.map(error)
         }
     }
 
     func signIn(email: String, password: String) async throws {
+        clearCachedProfile()
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             try await ensureFirestoreProfile(for: result.user, displayName: nil)
@@ -149,6 +210,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
                 throw AuthError.emailNotVerified
             }
             clearPendingVerification()
+            try await refreshCachedProfile()
         } catch let error as AuthError {
             throw error
         } catch {
@@ -163,6 +225,10 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
             changeRequest.displayName = displayName
             try await changeRequest.commitChanges()
 
+            // Firestore より先に送信する。プロフィール保存が失敗しても認証メールは届くようにする。
+            try await FirebaseEmailVerificationSettings.send(to: result.user)
+            storePendingVerification(displayName: displayName)
+
             let profileData = FirestoreUserMapper.registrationProfile(
                 uid: result.user.uid,
                 email: email,
@@ -172,9 +238,6 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
             try await db.collection(FirestoreCollections.users)
                 .document(result.user.uid)
                 .setData(profileData, merge: true)
-
-            try await FirebaseEmailVerificationSettings.send(to: result.user)
-            storePendingVerification(displayName: displayName)
         } catch {
             throw FirebaseAuthErrorMapper.map(error)
         }
@@ -185,6 +248,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         try await db.collection(FirestoreCollections.users)
             .document(uid)
             .setData(FirestoreUserMapper.roleUpdate(role), merge: true)
+        try await refreshCachedProfile()
     }
 
     func completeProfile(_ input: ProfileCompletionInput) async throws {
@@ -194,9 +258,11 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         try await db.collection(FirestoreCollections.users)
             .document(uid)
             .setData(payload, merge: true)
+        try await refreshCachedProfile()
     }
 
     func signInWithGoogle() async throws {
+        clearCachedProfile()
         do {
             try await GoogleSignInHelper.signIn()
             guard let user = FirebaseAuthSession.currentUser else {
@@ -204,6 +270,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
             }
             try await ensureFirestoreProfile(for: user, displayName: user.displayName)
             clearPendingVerification()
+            try await refreshCachedProfile()
         } catch let error as AuthError {
             throw error
         } catch {
@@ -212,6 +279,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
     }
 
     func signInWithApple(idToken: String, nonce: String, fullName: String?) async throws {
+        clearCachedProfile()
         do {
             let credential = AppleSignInHelper.credential(
                 idToken: idToken,
@@ -221,6 +289,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
             let result = try await Auth.auth().signIn(with: credential)
             try await ensureFirestoreProfile(for: result.user, displayName: fullName ?? result.user.displayName)
             clearPendingVerification()
+            try await refreshCachedProfile()
         } catch {
             throw FirebaseAuthErrorMapper.map(error)
         }
@@ -257,6 +326,7 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
                     FirestoreFields.User.isVerified: true,
                     FirestoreFields.User.updatedAt: FirestoreDateCodec.isoString(),
                 ], merge: true)
+            try await refreshCachedProfile()
             return true
         }
         return false
