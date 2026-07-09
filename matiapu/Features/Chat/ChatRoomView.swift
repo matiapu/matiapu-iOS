@@ -21,9 +21,10 @@ struct ChatRoomView: View {
         }
         .navigationTitle(conversation.partnerName)
         .task(id: conversation.id) {
-            await viewModel.loadMessages(for: conversation.id)
+            await viewModel.startObservingMessages(for: conversation.id)
         }
         .onDisappear {
+            viewModel.stopObservingMessages()
             viewModel.clearOpenedConversation()
         }
     }
@@ -86,7 +87,10 @@ struct ChatRoomView: View {
         if message.isFromCurrentUser {
             ChatOutgoingMessageRow(message: message)
         } else {
-            ChatIncomingMessageRow(message: message)
+            ChatIncomingMessageRow(
+                message: message,
+                partnerProfileImageURL: conversation.partnerProfileImageURL
+            )
         }
     }
 
@@ -109,6 +113,7 @@ struct ChatRoomView: View {
                 id: "chat-1",
                 partnerId: "leg-2",
                 partnerName: "ブリティッシュブルー",
+                partnerProfileImageURL: nil,
                 lastMessage: "こんばんにゃー",
                 updatedAt: .now,
                 unreadCount: 0

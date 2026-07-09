@@ -28,6 +28,13 @@ struct ChatRoomUseCase: Sendable {
         try await chatRepository.fetchMessages(conversationId: conversationId)
     }
 
+    func observeMessages(
+        conversationId: String,
+        onUpdate: @escaping @Sendable ([ChatMessage]) -> Void
+    ) async throws -> ChatMessageObservation {
+        try await chatRepository.observeMessages(conversationId: conversationId, onUpdate: onUpdate)
+    }
+
     func sendMessage(conversationId: String, text: String) async throws -> ChatMessage {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {

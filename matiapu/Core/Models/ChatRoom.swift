@@ -39,6 +39,7 @@ struct ChatRoom: Identifiable, Sendable {
     nonisolated func conversation(
         currentUID: String,
         partnerName: String,
+        partnerProfileImageURL: String? = nil,
         unreadCount: Int = 0
     ) -> ChatConversation? {
         guard let partnerID = partnerID(currentUID: currentUID) else { return nil }
@@ -47,6 +48,7 @@ struct ChatRoom: Identifiable, Sendable {
             id: id,
             partnerId: partnerID,
             partnerName: partnerName,
+            partnerProfileImageURL: partnerProfileImageURL,
             lastMessage: decryptedLastMessage() ?? "",
             updatedAt: lastMessageAt,
             unreadCount: unreadCount

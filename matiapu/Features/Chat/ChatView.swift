@@ -79,12 +79,10 @@ struct ChatView: View {
     private func conversationRow(_ conversation: ChatConversation) -> some View {
         SettingsCard {
             HStack(spacing: AppSpacing.settingsProfileCardSpacing) {
-                Circle()
-                    .fill(AppColors.settingsProfileAvatarPlaceholder)
-                    .frame(
-                        width: AppSize.settingsProfileCardAvatar,
-                        height: AppSize.settingsProfileCardAvatar
-                    )
+                ProfileAvatarView(
+                    imageURL: conversation.partnerProfileImageURL,
+                    size: AppSize.settingsProfileCardAvatar
+                )
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(conversation.partnerName)

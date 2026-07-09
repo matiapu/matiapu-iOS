@@ -3,7 +3,7 @@
 //  matiapu
 //
 
-import FirebaseFirestore
+@preconcurrency import FirebaseFirestore
 import Foundation
 
 final class FirebaseChatRepository: ChatRepository, @unchecked Sendable {
@@ -17,30 +17,36 @@ final class FirebaseChatRepository: ChatRepository, @unchecked Sendable {
     func fetchConversations() async throws -> [ChatConversation] {
         let uid = try await FirebaseAuthSession.ensureSignedIn()
         let rooms = try await chatService.fetchRooms(for: uid)
+        let partnerIDs = rooms.compactMap { $0.partnerID(currentUID: uid) }
+        let profiles = await fetchPartnerProfiles(partnerIDs)
 
-        return await withTaskGroup(of: ChatConversation?.self) { group in
-            for room in rooms {
-                group.addTask {
-                    guard let partnerID = room.partnerID(currentUID: uid) else { return nil }
-                    let partnerName = await self.partnerName(for: partnerID)
-                    return room.conversation(currentUID: uid, partnerName: partnerName)
-                }
-            }
-
-            var conversations: [ChatConversation] = []
-            conversations.reserveCapacity(rooms.count)
-            for await conversation in group {
-                if let conversation {
-                    conversations.append(conversation)
-                }
-            }
-            return conversations.sorted { $0.updatedAt > $1.updatedAt }
+        return rooms.compactMap { room in
+            guard let partnerID = room.partnerID(currentUID: uid) else { return nil }
+            let profile = profiles[partnerID]
+            return room.conversation(
+                currentUID: uid,
+                partnerName: profile?.displayName ?? UserPublicProfile.fallbackDisplayName,
+                partnerProfileImageURL: profile?.profileImageURL
+            )
         }
+        .sorted { $0.updatedAt > $1.updatedAt }
     }
 
     func fetchMessages(conversationId: String) async throws -> [ChatMessage] {
         let uid = try await FirebaseAuthSession.ensureSignedIn()
         return try await chatService.fetchMessages(roomID: conversationId, currentUID: uid)
+    }
+
+    func observeMessages(
+        conversationId: String,
+        onUpdate: @escaping @Sendable ([ChatMessage]) -> Void
+    ) async throws -> ChatMessageObservation {
+        let uid = try await FirebaseAuthSession.ensureSignedIn()
+        return chatService.observeMessages(
+            roomID: conversationId,
+            currentUID: uid,
+            onUpdate: onUpdate
+        )
     }
 
     func sendMessage(conversationId: String, text: String) async throws -> ChatMessage {
@@ -64,13 +70,35 @@ final class FirebaseChatRepository: ChatRepository, @unchecked Sendable {
         )
     }
 
-    private func partnerName(for partnerID: String) async -> String {
+    private func fetchPartnerProfiles(_ partnerIDs: [String]) async -> [String: UserPublicProfile] {
+        let uniqueIDs = Array(Set(partnerIDs))
+        guard !uniqueIDs.isEmpty else { return [:] }
+
+        return await withTaskGroup(of: (String, UserPublicProfile?).self) { group in
+            for partnerID in uniqueIDs {
+                group.addTask {
+                    (partnerID, await self.partnerProfile(for: partnerID))
+                }
+            }
+
+            var profiles: [String: UserPublicProfile] = [:]
+            profiles.reserveCapacity(uniqueIDs.count)
+            for await (partnerID, profile) in group {
+                if let profile {
+                    profiles[partnerID] = profile
+                }
+            }
+            return profiles
+        }
+    }
+
+    private func partnerProfile(for partnerID: String) async -> UserPublicProfile? {
         do {
             let snapshot = try await db.collection(FirestoreCollections.users).document(partnerID).getDocument()
-            guard let data = snapshot.data() else { return UserPublicProfile.fallbackDisplayName }
-            return FirestoreUserPublicProfileMapper.map(from: data, uid: partnerID).displayName
+            guard let data = snapshot.data() else { return nil }
+            return FirestoreUserPublicProfileMapper.map(from: data, uid: partnerID)
         } catch {
-            return UserPublicProfile.fallbackDisplayName
+            return nil
         }
     }
 }

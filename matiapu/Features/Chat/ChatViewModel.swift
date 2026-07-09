@@ -18,6 +18,7 @@ final class ChatViewModel {
 
     private let fetchConversations: FetchConversationsUseCase
     private let chatRoom: ChatRoomUseCase
+    private var messagesObservation: ChatMessageObservation?
 
     var onConversationVisibilityChanged: ((String?) -> Void)?
 
@@ -50,14 +51,9 @@ final class ChatViewModel {
         }
     }
 
-    func loadMessages(for conversationID: String) async {
-        isLoadingMessages = true
-        errorMessage = nil
+    func startObservingMessages(for conversationID: String) async {
+        stopObservingMessages()
         onConversationVisibilityChanged?(conversationID)
-        defer {
-            isLoadingMessages = false
-            onConversationVisibilityChanged?(nil)
-        }
 
         guard ChatCrypto.isSaltConfigured else {
             messagesByConversationID[conversationID] = []
@@ -65,16 +61,54 @@ final class ChatViewModel {
             return
         }
 
-        do {
-            let messages = try await chatRoom.loadMessages(conversationId: conversationID)
-            messagesByConversationID[conversationID] = messages
+        isLoadingMessages = true
+        errorMessage = nil
 
-            if messages.contains(where: { $0.text == FirestoreChatMessageMapper.undecryptableMessageText }) {
-                errorMessage = "一部のメッセージを復号できませんでした。CHAT_SALT が Web アプリと一致しているか確認してください。"
+        do {
+            messagesObservation = try await chatRoom.observeMessages(conversationId: conversationID) { messages in
+                Task { @MainActor [weak self] in
+                    self?.applyMessages(messages, conversationID: conversationID)
+                }
             }
         } catch {
             messagesByConversationID[conversationID] = []
+            isLoadingMessages = false
             errorMessage = "メッセージの読み込みに失敗しました。"
+        }
+    }
+
+    func stopObservingMessages() {
+        messagesObservation?.stop()
+        messagesObservation = nil
+        onConversationVisibilityChanged?(nil)
+    }
+
+    func loadMessages(for conversationID: String) async {
+        await startObservingMessages(for: conversationID)
+    }
+
+    private func applyMessages(_ messages: [ChatMessage], conversationID: String) {
+        messagesByConversationID[conversationID] = messages
+        isLoadingMessages = false
+
+        if let lastMessage = messages.last,
+           !ChatCrypto.isUndecryptableDisplayText(lastMessage.text) {
+            upsertConversationPreview(
+                conversationId: conversationID,
+                lastMessage: lastMessage.text,
+                updatedAt: lastMessage.sentAt
+            )
+        }
+
+        let undecryptableCount = messages.filter { ChatCrypto.isUndecryptableDisplayText($0.text) }.count
+        if undecryptableCount > 0 {
+            if undecryptableCount == messages.count {
+                errorMessage = "メッセージを復号できませんでした。Secrets.xcconfig の CHAT_SALT が Web アプリの NEXT_PUBLIC_CHAT_SALT と一致しているか確認してください。"
+            } else {
+                errorMessage = "一部のメッセージを復号できませんでした。アプリ更新前に送信されたメッセージは表示できない場合があります。"
+            }
+        } else {
+            errorMessage = nil
         }
     }
 
@@ -84,9 +118,6 @@ final class ChatViewModel {
 
         do {
             let message = try await chatRoom.sendMessage(conversationId: conversationId, text: trimmed)
-            var messages = messagesByConversationID[conversationId] ?? []
-            messages.append(message)
-            messagesByConversationID[conversationId] = messages
             upsertConversationPreview(
                 conversationId: conversationId,
                 lastMessage: trimmed,
@@ -128,6 +159,7 @@ final class ChatViewModel {
             id: current.id,
             partnerId: current.partnerId,
             partnerName: current.partnerName,
+            partnerProfileImageURL: current.partnerProfileImageURL,
             lastMessage: lastMessage,
             updatedAt: updatedAt,
             unreadCount: current.unreadCount
@@ -145,6 +177,7 @@ extension ChatViewModel {
                 id: "chat-1",
                 partnerId: "leg-2",
                 partnerName: "田中 太郎",
+                partnerProfileImageURL: nil,
                 lastMessage: "マッチしました！メッセージを送ってみましょう。",
                 updatedAt: .now,
                 unreadCount: 1
@@ -161,6 +194,7 @@ extension ChatViewModel {
                 id: conversationID,
                 partnerId: "leg-2",
                 partnerName: "ブリティッシュブルー",
+                partnerProfileImageURL: nil,
                 lastMessage: "こんばんにゃー",
                 updatedAt: .now,
                 unreadCount: 0

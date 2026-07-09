@@ -3,7 +3,7 @@
 //  matiapu
 //
 
-import FirebaseFirestore
+@preconcurrency import FirebaseFirestore
 import Foundation
 
 final class FirestoreChatService: @unchecked Sendable {
@@ -103,19 +103,48 @@ final class FirestoreChatService: @unchecked Sendable {
     }
 
     func fetchMessages(roomID: String, currentUID: String) async throws -> [ChatMessage] {
-        let snapshot = try await db.collection(FirestoreCollections.chatRooms)
+        let snapshot = try await messagesQuery(roomID: roomID).getDocuments()
+        return mapMessages(from: snapshot.documents, roomID: roomID, currentUID: currentUID)
+    }
+
+    func observeMessages(
+        roomID: String,
+        currentUID: String,
+        onUpdate: @escaping @Sendable ([ChatMessage]) -> Void
+    ) -> ChatMessageObservation {
+        let registration = messagesQuery(roomID: roomID).addSnapshotListener { snapshot, _ in
+            guard let documents = snapshot?.documents else { return }
+            let messages = self.mapMessages(
+                from: documents,
+                roomID: roomID,
+                currentUID: currentUID
+            )
+            onUpdate(messages)
+        }
+        return ChatMessageObservation {
+            registration.remove()
+        }
+    }
+
+    private func messagesQuery(roomID: String) -> Query {
+        db.collection(FirestoreCollections.chatRooms)
             .document(roomID)
             .collection(FirestoreCollections.messages)
-            .getDocuments()
+            .order(by: FirestoreFields.ChatMessage.createdAt)
+    }
 
-        let messages = snapshot.documents.compactMap { document in
+    private func mapMessages(
+        from documents: [QueryDocumentSnapshot],
+        roomID: String,
+        currentUID: String
+    ) -> [ChatMessage] {
+        documents.compactMap { document in
             FirestoreChatMessageMapper.message(
                 from: document,
                 roomID: roomID,
                 currentUID: currentUID
             )
         }
-        return messages.sorted { $0.sentAt < $1.sentAt }
     }
 
     func existingRoomID(partnerID: String, currentUID: String) async throws -> String? {
@@ -133,13 +162,26 @@ final class FirestoreChatService: @unchecked Sendable {
         let matchMessage = "マッチしました！メッセージを送ってみましょう。"
         try await sendSystemNotification(roomID: roomID, text: matchMessage)
 
+        let profile = await partnerProfile(for: partnerID)
+
         return ChatConversation(
             id: roomID,
             partnerId: partnerID,
-            partnerName: partnerName,
+            partnerName: profile?.displayName ?? partnerName,
+            partnerProfileImageURL: profile?.profileImageURL,
             lastMessage: matchMessage,
             updatedAt: .now,
             unreadCount: 1
         )
+    }
+
+    private func partnerProfile(for partnerID: String) async -> UserPublicProfile? {
+        do {
+            let snapshot = try await db.collection(FirestoreCollections.users).document(partnerID).getDocument()
+            guard let data = snapshot.data() else { return nil }
+            return FirestoreUserPublicProfileMapper.map(from: data, uid: partnerID)
+        } catch {
+            return nil
+        }
     }
 }

@@ -86,10 +86,11 @@ struct ChatDateSeparator: View {
 
 struct ChatIncomingMessageRow: View {
     let message: ChatMessage
+    let partnerProfileImageURL: String?
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
-            ProfileAvatarView(imageURL: nil, size: AppSize.chatAvatar)
+            ProfileAvatarView(imageURL: partnerProfileImageURL, size: AppSize.chatAvatar)
 
             HStack(alignment: .bottom, spacing: 6) {
                 ChatMessageBubble(text: message.text, direction: .incoming)

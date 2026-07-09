@@ -9,6 +9,7 @@ struct ChatConversation: Identifiable, Hashable {
     let id: String
     let partnerId: String
     let partnerName: String
+    let partnerProfileImageURL: String?
     let lastMessage: String
     let updatedAt: Date
     let unreadCount: Int
