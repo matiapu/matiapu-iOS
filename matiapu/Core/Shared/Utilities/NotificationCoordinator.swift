@@ -16,13 +16,14 @@ final class NotificationCoordinator {
     var onOpenNotifications: (() -> Void)?
 
     init(
-        monitor: FirestoreRealtimeNotificationMonitor = FirestoreRealtimeNotificationMonitor(),
-        pushService: PushNotificationService = .shared,
-        inboxStore: LocalNotificationInboxStore = .shared
+        monitor: FirestoreRealtimeNotificationMonitor? = nil,
+        pushService: PushNotificationService? = nil,
+        inboxStore: LocalNotificationInboxStore? = nil
     ) {
-        self.monitor = monitor
-        self.pushService = pushService
-        self.inboxStore = inboxStore
+        let inbox = inboxStore ?? LocalNotificationInboxStore.shared
+        self.inboxStore = inbox
+        self.monitor = monitor ?? FirestoreRealtimeNotificationMonitor(inboxStore: inbox)
+        self.pushService = pushService ?? PushNotificationService.shared
     }
 
     func start() {
@@ -43,6 +44,8 @@ final class NotificationCoordinator {
         Task {
             await pushService.requestAuthorizationIfNeeded()
         }
+        // トークン発行がログインより先だった場合に備えて保存を再試行
+        PushTokenRegistrar.shared.registerPendingTokenIfNeeded()
     }
 
     func stop() {
@@ -51,6 +54,19 @@ final class NotificationCoordinator {
 
     func setOpenConversationID(_ conversationID: String?) {
         monitor.setOpenConversationID(conversationID)
+    }
+
+    func markMatchAsKnown(currentUID: String, partnerID: String, currentRole: UserRole) {
+        let matchID: String
+        switch currentRole {
+        case .citizen:
+            matchID = FirestoreMatchService.matchDocumentID(userUID: currentUID, politicianUID: partnerID)
+        case .legislator:
+            matchID = FirestoreMatchService.matchDocumentID(userUID: partnerID, politicianUID: currentUID)
+        case .store:
+            matchID = FirestoreMatchService.matchDocumentID(userUID: currentUID, politicianUID: partnerID)
+        }
+        monitor.markMatchAsKnown(matchID)
     }
 
     func notifyMatch(partnerName: String, conversationID: String) async {

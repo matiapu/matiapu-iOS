@@ -5,16 +5,24 @@
 
 import Foundation
 
+private enum NotificationInboxDefaults {
+    nonisolated static let suiteName = "com.minato.matiapu.notification-inbox"
+}
+
 /// マッチ・メッセージ通知を端末内に保持するストア
 final class LocalNotificationInboxStore: @unchecked Sendable {
     static let shared = LocalNotificationInboxStore()
 
     private let lock = NSLock()
-    private let defaults: UserDefaults
+    private nonisolated(unsafe) let defaults: UserDefaults
     private let inboxKey = "notification_inbox"
     private let readIDsKey = "notification_read_ids"
 
-    init(defaults: UserDefaults = .standard) {
+    /// Swift 6 では `UserDefaults.standard` が Main Actor 扱いのため、専用 suite を使う
+    nonisolated init() {
+        guard let defaults = UserDefaults(suiteName: NotificationInboxDefaults.suiteName) else {
+            fatalError("通知受信箱用 UserDefaults の作成に失敗しました")
+        }
         self.defaults = defaults
     }
 

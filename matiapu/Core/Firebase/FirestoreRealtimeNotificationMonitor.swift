@@ -30,7 +30,7 @@ final class FirestoreRealtimeNotificationMonitor: @unchecked Sendable {
 
     var onEvent: (@Sendable (RealtimeNotificationEvent) -> Void)?
 
-    init(inboxStore: LocalNotificationInboxStore = .shared) {
+    init(inboxStore: LocalNotificationInboxStore) {
         self.inboxStore = inboxStore
     }
 
@@ -59,7 +59,7 @@ final class FirestoreRealtimeNotificationMonitor: @unchecked Sendable {
     }
 
     func markMatchAsKnown(_ matchID: String) {
-        locked { knownMatchIDs.insert(matchID) }
+        locked { _ = knownMatchIDs.insert(matchID) }
     }
 
     func stop() {

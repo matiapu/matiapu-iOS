@@ -18,9 +18,11 @@ final class AppViewModels {
 
     var shouldOpenSettingsNotifications = false
 
+    private let authRepository: any AuthRepository
     private let notificationCoordinator = NotificationCoordinator()
 
     init(dependencies: AppDependencies) {
+        authRepository = dependencies.authRepository
         let useCases = dependencies.useCases
         let profileViewModel = AppViewModelFactory.profile(dependencies: dependencies)
         let chatViewModel = AppViewModelFactory.chat(dependencies: dependencies)
@@ -36,12 +38,12 @@ final class AppViewModels {
 
         match.onMatched = { [weak self] conversation in
             guard let self else { return }
-            await chatViewModel.handleMatch(conversation)
+            await handleMatched(conversation)
         }
 
         post.onMatched = { [weak self] conversation in
             guard let self else { return }
-            await chatViewModel.handleMatch(conversation)
+            await handleMatched(conversation)
             await openChat(for: conversation)
         }
 
@@ -66,6 +68,17 @@ final class AppViewModels {
         }
 
         notificationCoordinator.start()
+    }
+
+    private func handleMatched(_ conversation: ChatConversation) async {
+        if let profile = try? await authRepository.fetchCurrentUser() {
+            notificationCoordinator.markMatchAsKnown(
+                currentUID: profile.id,
+                partnerID: conversation.partnerId,
+                currentRole: profile.role
+            )
+        }
+        await chat.handleMatch(conversation)
     }
 
     func openChat(for conversation: ChatConversation) async {
