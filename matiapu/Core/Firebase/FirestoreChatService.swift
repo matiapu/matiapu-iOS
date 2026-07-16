@@ -126,6 +126,30 @@ final class FirestoreChatService: @unchecked Sendable {
         }
     }
 
+    func observeRoom(
+        roomID: String,
+        onUpdate: @escaping @Sendable (ChatRoom) -> Void
+    ) -> ChatMessageObservation {
+        let registration = db.collection(FirestoreCollections.chatRooms)
+            .document(roomID)
+            .addSnapshotListener { snapshot, _ in
+                guard let snapshot, let room = FirestoreChatRoomMapper.room(from: snapshot) else { return }
+                onUpdate(room)
+            }
+        return ChatMessageObservation {
+            registration.remove()
+        }
+    }
+
+    func markRoomAsRead(roomID: String, userID: String, readAt: Date = .now) async throws {
+        try await db.collection(FirestoreCollections.chatRooms)
+            .document(roomID)
+            .setData(
+                FirestoreChatRoomMapper.lastReadAtUpdate(userID: userID, readAt: readAt),
+                merge: true
+            )
+    }
+
     private func messagesQuery(roomID: String) -> Query {
         db.collection(FirestoreCollections.chatRooms)
             .document(roomID)

@@ -104,15 +104,18 @@ struct ChatIncomingMessageRow: View {
 
 struct ChatOutgoingMessageRow: View {
     let message: ChatMessage
+    var showsReadReceipt = false
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 6) {
             Spacer(minLength: 48)
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text("既読")
-                    .font(.caption2)
-                    .foregroundStyle(AppColors.chatTimestamp)
+                if showsReadReceipt {
+                    Text("既読")
+                        .font(.caption2)
+                        .foregroundStyle(AppColors.chatTimestamp)
+                }
                 ChatMessageTimestamp(message.sentAt)
             }
 

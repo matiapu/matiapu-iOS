@@ -49,6 +49,20 @@ final class FirebaseChatRepository: ChatRepository, @unchecked Sendable {
         )
     }
 
+    func observeRoom(
+        conversationId: String,
+        onUpdate: @escaping @Sendable (ChatRoom) -> Void
+    ) async throws -> ChatMessageObservation {
+        _ = try await FirebaseAuthSession.ensureSignedIn()
+        return chatService.observeRoom(roomID: conversationId, onUpdate: onUpdate)
+    }
+
+    func markConversationAsRead(conversationId: String) async throws {
+        let uid = try await FirebaseAuthSession.ensureSignedIn()
+        let readAt = Date.now
+        try await chatService.markRoomAsRead(roomID: conversationId, userID: uid, readAt: readAt)
+    }
+
     func sendMessage(conversationId: String, text: String) async throws -> ChatMessage {
         let uid = try await FirebaseAuthSession.ensureSignedIn()
         let roomSnapshot = try await db.collection(FirestoreCollections.chatRooms)

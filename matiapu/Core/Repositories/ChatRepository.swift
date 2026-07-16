@@ -45,6 +45,11 @@ protocol ChatRepository: Sendable {
         conversationId: String,
         onUpdate: @escaping @Sendable ([ChatMessage]) -> Void
     ) async throws -> ChatMessageObservation
+    func observeRoom(
+        conversationId: String,
+        onUpdate: @escaping @Sendable (ChatRoom) -> Void
+    ) async throws -> ChatMessageObservation
+    func markConversationAsRead(conversationId: String) async throws
     func sendMessage(conversationId: String, text: String) async throws -> ChatMessage
 }
 
@@ -52,6 +57,7 @@ final class MockChatRepository: ChatRepository, @unchecked Sendable {
     private let lock = NSLock()
     private var conversations: [ChatConversation] = []
     private var messagesByConversation: [String: [ChatMessage]] = [:]
+    private var roomsByID: [String: ChatRoom] = [:]
 
     func fetchConversations() async throws -> [ChatConversation] {
         locked { conversations.sorted { $0.updatedAt > $1.updatedAt } }
@@ -69,6 +75,47 @@ final class MockChatRepository: ChatRepository, @unchecked Sendable {
     ) async throws -> ChatMessageObservation {
         onUpdate(try await fetchMessages(conversationId: conversationId))
         return ChatMessageObservation(onStop: {})
+    }
+
+    func observeRoom(
+        conversationId: String,
+        onUpdate: @escaping @Sendable (ChatRoom) -> Void
+    ) async throws -> ChatMessageObservation {
+        if let room = locked({ roomsByID[conversationId] }) {
+            onUpdate(room)
+        }
+        return ChatMessageObservation(onStop: {})
+    }
+
+    func markConversationAsRead(conversationId: String) async throws {
+        locked {
+            guard let conversation = conversations.first(where: { $0.id == conversationId }) else {
+                return
+            }
+            let readAt = Date.now
+            roomsByID[conversationId] = ChatRoom(
+                id: conversationId,
+                userIDs: [MockMatching.demoCitizenId, conversation.partnerId],
+                createdAt: conversation.updatedAt,
+                lastMessageAt: conversation.updatedAt,
+                lastMessageText: nil,
+                lastMessageIV: nil,
+                lastMessageSenderID: conversation.partnerId,
+                lastReadAtByUserID: [MockMatching.demoCitizenId: readAt]
+            )
+            if let index = conversations.firstIndex(where: { $0.id == conversationId }) {
+                let current = conversations[index]
+                conversations[index] = ChatConversation(
+                    id: current.id,
+                    partnerId: current.partnerId,
+                    partnerName: current.partnerName,
+                    partnerProfileImageURL: current.partnerProfileImageURL,
+                    lastMessage: current.lastMessage,
+                    updatedAt: current.updatedAt,
+                    unreadCount: 0
+                )
+            }
+        }
     }
 
     func sendMessage(conversationId: String, text: String) async throws -> ChatMessage {
@@ -127,6 +174,16 @@ final class MockChatRepository: ChatRepository, @unchecked Sendable {
 
             conversations.append(conversation)
             messagesByConversation[conversationId] = [systemMessage]
+            roomsByID[conversationId] = ChatRoom(
+                id: conversationId,
+                userIDs: [MockMatching.demoCitizenId, partnerId],
+                createdAt: .now,
+                lastMessageAt: .now,
+                lastMessageText: nil,
+                lastMessageIV: nil,
+                lastMessageSenderID: "system",
+                lastReadAtByUserID: [:]
+            )
             return conversation
         }
     }

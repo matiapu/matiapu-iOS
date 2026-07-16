@@ -14,9 +14,25 @@ struct ChatRoom: Identifiable, Sendable {
     let lastMessageText: String?
     let lastMessageIV: String?
     let lastMessageSenderID: String?
+    /// ユーザーごとの最終既読時刻
+    let lastReadAtByUserID: [String: Date]
 
     nonisolated func partnerID(currentUID: String) -> String? {
         userIDs.first { $0 != currentUID }
+    }
+
+    nonisolated func lastReadAt(for userID: String) -> Date? {
+        lastReadAtByUserID[userID]
+    }
+
+    nonisolated func unreadCount(for currentUID: String) -> Int {
+        guard let senderID = lastMessageSenderID, senderID != currentUID, senderID != "system" else {
+            return 0
+        }
+        guard let myReadAt = lastReadAt(for: currentUID) else {
+            return 1
+        }
+        return lastMessageAt > myReadAt ? 1 : 0
     }
 
     nonisolated func decryptedLastMessage() -> String? {
@@ -40,7 +56,7 @@ struct ChatRoom: Identifiable, Sendable {
         currentUID: String,
         partnerName: String,
         partnerProfileImageURL: String? = nil,
-        unreadCount: Int = 0
+        unreadCount: Int? = nil
     ) -> ChatConversation? {
         guard let partnerID = partnerID(currentUID: currentUID) else { return nil }
 
@@ -51,7 +67,7 @@ struct ChatRoom: Identifiable, Sendable {
             partnerProfileImageURL: partnerProfileImageURL,
             lastMessage: decryptedLastMessage() ?? "",
             updatedAt: lastMessageAt,
-            unreadCount: unreadCount
+            unreadCount: unreadCount ?? self.unreadCount(for: currentUID)
         )
     }
 }

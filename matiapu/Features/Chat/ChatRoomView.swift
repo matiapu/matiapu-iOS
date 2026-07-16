@@ -19,7 +19,7 @@ struct ChatRoomView: View {
                 }
             }
         }
-        .navigationTitle(conversation.partnerName)
+        .navigationTitle(resolvedConversation.partnerName)
         .task(id: conversation.id) {
             await viewModel.startObservingMessages(for: conversation.id)
         }
@@ -85,13 +85,23 @@ struct ChatRoomView: View {
     @ViewBuilder
     private func messageRow(_ message: ChatMessage) -> some View {
         if message.isFromCurrentUser {
-            ChatOutgoingMessageRow(message: message)
+            ChatOutgoingMessageRow(
+                message: message,
+                showsReadReceipt: viewModel.showsReadReceipt(
+                    for: message,
+                    in: conversation.id
+                )
+            )
         } else {
             ChatIncomingMessageRow(
                 message: message,
-                partnerProfileImageURL: conversation.partnerProfileImageURL
+                partnerProfileImageURL: resolvedConversation.partnerProfileImageURL
             )
         }
+    }
+
+    private var resolvedConversation: ChatConversation {
+        viewModel.conversations.first { $0.id == conversation.id } ?? conversation
     }
 
     private func sendDraftMessage() {
@@ -103,22 +113,5 @@ struct ChatRoomView: View {
         Task {
             await viewModel.sendMessage(conversationId: conversation.id, text: message)
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        ChatRoomView(
-            conversation: ChatConversation(
-                id: "chat-1",
-                partnerId: "leg-2",
-                partnerName: "ブリティッシュブルー",
-                partnerProfileImageURL: nil,
-                lastMessage: "こんばんにゃー",
-                updatedAt: .now,
-                unreadCount: 0
-            ),
-            viewModel: .roomPreview
-        )
     }
 }

@@ -84,6 +84,7 @@ enum FirestoreFields {
         static let lastMessageText = "last_message_text"
         static let lastMessageIV = "last_message_iv"
         static let lastMessageSenderID = "last_message_sender_id"
+        static let lastReadAt = "last_read_at"
     }
 
     enum ChatMessage {

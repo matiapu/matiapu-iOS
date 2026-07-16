@@ -29,8 +29,24 @@ enum FirestoreChatRoomMapper {
             lastMessageText: data[FirestoreFields.ChatRoom.lastMessageText] as? String,
             lastMessageIV: data[FirestoreFields.ChatRoom.lastMessageIV] as? String,
             lastMessageSenderID: data[FirestoreFields.ChatRoom.lastMessageSenderID] as? String
-                ?? data["lastMessageSenderId"] as? String
+                ?? data["lastMessageSenderId"] as? String,
+            lastReadAtByUserID: lastReadAtByUserID(from: data)
         )
+    }
+
+    private static func lastReadAtByUserID(from data: [String: Any]) -> [String: Date] {
+        let raw = data[FirestoreFields.ChatRoom.lastReadAt] as? [String: Any]
+            ?? data["lastReadAt"] as? [String: Any]
+            ?? [:]
+
+        var result: [String: Date] = [:]
+        result.reserveCapacity(raw.count)
+        for (userID, value) in raw {
+            let trimmed = userID.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty, let date = FirestoreDateCodec.date(from: value) else { continue }
+            result[trimmed] = date
+        }
+        return result
     }
 
     private static func userIDs(from data: [String: Any]) -> [String]? {
@@ -69,6 +85,12 @@ enum FirestoreChatRoomMapper {
             FirestoreFields.ChatRoom.lastMessageText: encryptedContent,
             FirestoreFields.ChatRoom.lastMessageIV: iv,
             FirestoreFields.ChatRoom.lastMessageSenderID: senderID,
+        ]
+    }
+
+    static func lastReadAtUpdate(userID: String, readAt: Date = .now) -> [String: Any] {
+        [
+            "\(FirestoreFields.ChatRoom.lastReadAt).\(userID)": FirestoreDateCodec.timestamp(from: readAt),
         ]
     }
 }

@@ -11,6 +11,7 @@ import Observation
 final class ChatViewModel {
     private(set) var conversations: [ChatConversation] = []
     private(set) var messagesByConversationID: [String: [ChatMessage]] = [:]
+    private(set) var partnerLastReadAtByConversationID: [String: Date] = [:]
     private(set) var isLoadingConversations = false
     private(set) var isLoadingMessages = false
     var conversationToOpen: ChatConversation?
@@ -19,6 +20,7 @@ final class ChatViewModel {
     private let fetchConversations: FetchConversationsUseCase
     private let chatRoom: ChatRoomUseCase
     private var messagesObservation: ChatMessageObservation?
+    private var roomObservation: ChatMessageObservation?
 
     var onConversationVisibilityChanged: ((String?) -> Void)?
 
@@ -33,6 +35,18 @@ final class ChatViewModel {
 
     func isLoadingMessages(for conversationID: String) -> Bool {
         isLoadingMessages && messages(for: conversationID).isEmpty
+    }
+
+    /// LINE 風: 相手が読んだ送信メッセージのうち、最新の1件だけ「既読」を表示する。
+    func showsReadReceipt(for message: ChatMessage, in conversationID: String) -> Bool {
+        guard message.isFromCurrentUser else { return false }
+        guard let partnerReadAt = partnerLastReadAtByConversationID[conversationID] else {
+            return false
+        }
+        let readOutgoingIDs = messages(for: conversationID)
+            .filter { $0.isFromCurrentUser && $0.sentAt <= partnerReadAt }
+            .map(\.id)
+        return readOutgoingIDs.last == message.id
     }
 
     func loadConversations() async {
@@ -70,6 +84,13 @@ final class ChatViewModel {
                     self?.applyMessages(messages, conversationID: conversationID)
                 }
             }
+            roomObservation = try await chatRoom.observeRoom(conversationId: conversationID) { room in
+                Task { @MainActor [weak self] in
+                    self?.applyRoom(room, conversationID: conversationID)
+                }
+            }
+            try? await chatRoom.markAsRead(conversationId: conversationID)
+            await loadConversations()
         } catch {
             messagesByConversationID[conversationID] = []
             isLoadingMessages = false
@@ -80,6 +101,8 @@ final class ChatViewModel {
     func stopObservingMessages() {
         messagesObservation?.stop()
         messagesObservation = nil
+        roomObservation?.stop()
+        roomObservation = nil
         onConversationVisibilityChanged?(nil)
     }
 
@@ -110,6 +133,29 @@ final class ChatViewModel {
         } else {
             errorMessage = nil
         }
+
+        Task { [weak self] in
+            try? await self?.chatRoom.markAsRead(conversationId: conversationID)
+        }
+    }
+
+    private func applyRoom(_ room: ChatRoom, conversationID: String) {
+        if let partnerID = conversations.first(where: { $0.id == conversationID })?.partnerId {
+            partnerLastReadAtByConversationID[conversationID] = room.lastReadAt(for: partnerID)
+        }
+
+        if let index = conversations.firstIndex(where: { $0.id == conversationID }) {
+            let current = conversations[index]
+            conversations[index] = ChatConversation(
+                id: current.id,
+                partnerId: current.partnerId,
+                partnerName: current.partnerName,
+                partnerProfileImageURL: current.partnerProfileImageURL,
+                lastMessage: room.decryptedLastMessage() ?? current.lastMessage,
+                updatedAt: room.lastMessageAt,
+                unreadCount: 0
+            )
+        }
     }
 
     func sendMessage(conversationId: String, text: String) async {
@@ -123,6 +169,7 @@ final class ChatViewModel {
                 lastMessage: trimmed,
                 updatedAt: message.sentAt
             )
+            try? await chatRoom.markAsRead(conversationId: conversationId)
             await loadConversations()
         } catch {
             errorMessage = "メッセージの送信に失敗しました。"
