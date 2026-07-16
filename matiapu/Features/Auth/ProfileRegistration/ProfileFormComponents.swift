@@ -168,6 +168,10 @@ struct ProfileTextEditor: View {
 
 struct ProfileImagePickerSection: View {
     @Binding var selectedImage: UIImage?
+    var currentImageURL: String? = nil
+    var currentUserID: String? = nil
+    var title: String = "プロフィール画像（任意）"
+    var subtitle: String = "マッチング率が向上します"
     @State private var selectedItem: PhotosPickerItem?
 
     var body: some View {
@@ -183,10 +187,27 @@ struct ProfileImagePickerSection: View {
                                     .resizable()
                                     .scaledToFill()
                                     .clipShape(Circle())
+                            } else if let localImage = resolvedLocalImage {
+                                Image(uiImage: localImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .clipShape(Circle())
+                            } else if let currentImageURL, let url = URL(string: currentImageURL) {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .success(let image):
+                                        image
+                                            .resizable()
+                                            .scaledToFill()
+                                    case .failure, .empty:
+                                        personPlaceholder
+                                    @unknown default:
+                                        personPlaceholder
+                                    }
+                                }
+                                .clipShape(Circle())
                             } else {
-                                Image(systemName: "person.fill")
-                                    .font(.system(size: 36))
-                                    .foregroundStyle(AppColors.authIconMuted)
+                                personPlaceholder
                             }
                         }
                         .overlay(
@@ -205,11 +226,11 @@ struct ProfileImagePickerSection: View {
                 }
             }
 
-            Text("プロフィール画像（任意）")
+            Text(title)
                 .font(AppTypography.authFieldLabel)
                 .foregroundStyle(AppColors.authLabel)
 
-            Text("マッチング率が向上します")
+            Text(subtitle)
                 .font(.system(size: 12))
                 .foregroundStyle(AppColors.authSubtitle)
         }
@@ -223,6 +244,23 @@ struct ProfileImagePickerSection: View {
                 }
             }
         }
+    }
+
+    private var personPlaceholder: some View {
+        Image(systemName: "person.fill")
+            .font(.system(size: 36))
+            .foregroundStyle(AppColors.authIconMuted)
+    }
+
+    private var resolvedLocalImage: UIImage? {
+        if let currentUserID,
+           let image = LocalProfileImageStore.shared.image(forUID: currentUserID) {
+            return image
+        }
+        if let currentImageURL {
+            return LocalProfileImageStore.shared.image(forURL: currentImageURL)
+        }
+        return nil
     }
 }
 

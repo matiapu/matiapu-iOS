@@ -78,9 +78,11 @@ struct ProfileView: View {
             VStack(spacing: AppSpacing.profileHeaderSpacing) {
                 Spacer(minLength: 0)
 
-                Circle()
-                    .fill(AppColors.avatarPlaceholder)
-                    .frame(width: AppSize.profileAvatar, height: AppSize.profileAvatar)
+                ProfileAvatarView(
+                    imageURL: viewModel.profile?.profileImageURL,
+                    size: AppSize.profileAvatar,
+                    userID: viewModel.profile?.id
+                )
 
                 VStack(spacing: AppSpacing.profileNameSpacing) {
                     Text(viewModel.profile?.registeredArea ?? " ")
@@ -161,11 +163,4 @@ struct ProfileView: View {
             .frame(width: size, height: size)
             .clipped()
     }
-}
-
-#Preview {
-    ProfileView(
-        viewModel: .preview,
-        dependencies: .live
-    )
 }

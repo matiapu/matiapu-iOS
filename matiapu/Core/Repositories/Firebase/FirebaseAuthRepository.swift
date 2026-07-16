@@ -66,8 +66,12 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
     }
 
     private func clearCachedProfile() {
-        if let uid = cachedProfile.withLock({ $0?.id }) {
-            profileStore.remove(uid: uid)
+        if let profile = cachedProfile.withLock({ $0 }) {
+            profileStore.remove(uid: profile.id)
+            LocalProfileImageStore.shared.remove(forUID: profile.id)
+            if let imageURL = profile.profileImageURL {
+                LocalProfileImageStore.shared.remove(forURL: imageURL)
+            }
         }
         cachedProfile.withLock { $0 = nil }
     }
@@ -152,6 +156,17 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
             .document(uid)
             .setData(FirestoreUserMapper.displayNameUpdate(name), merge: true)
         patchCachedProfile { $0.updating(displayName: name, nickname: name) }
+    }
+
+    func updateProfileImage(_ image: UIImage) async throws {
+        let uid = try await FirebaseAuthSession.ensureSignedIn()
+        guard let imageURL = try await uploadProfileImageIfNeeded(image, uid: uid) else {
+            throw AuthError.unknown("プロフィール画像のアップロードに失敗しました。")
+        }
+        try await db.collection(FirestoreCollections.users)
+            .document(uid)
+            .setData(FirestoreUserMapper.profileImageUpdate(imageURL), merge: true)
+        patchCachedProfile { $0.updating(profileImageURL: imageURL) }
     }
 
     func updateRegisteredArea(_ area: String) async throws {
@@ -373,6 +388,8 @@ final class FirebaseAuthRepository: AuthRepository, @unchecked Sendable {
         metadata.contentType = "image/jpeg"
 
         _ = try await reference.putDataAsync(data, metadata: metadata)
-        return try await reference.downloadURL().absoluteString
+        let imageURL = try await reference.downloadURL().absoluteString
+        LocalProfileImageStore.shared.save(data: data, forURL: imageURL, uid: uid)
+        return imageURL
     }
 }

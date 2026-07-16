@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import UIKit
 
 protocol AuthRepository: Sendable {
     var isAuthenticated: Bool { get }
@@ -14,6 +15,7 @@ protocol AuthRepository: Sendable {
     func fetchUserPosts() async throws -> [ProfilePostItem]
     func fetchPublicProfiles(userIDs: [String]) async throws -> [String: UserPublicProfile]
     func updateDisplayName(_ name: String) async throws
+    func updateProfileImage(_ image: UIImage) async throws
     func updateRegisteredArea(_ area: String) async throws
     func updateEmail(_ email: String) async throws
     func updatePassword(_ password: String) async throws
@@ -75,6 +77,10 @@ extension AuthRepository {
 
     func fetchPublicProfiles(userIDs: [String]) async throws -> [String: UserPublicProfile] { [:] }
 
+    func updateProfileImage(_ image: UIImage) async throws {
+        throw AuthError.unknown("この環境ではプロフィール画像を更新できません。")
+    }
+
     func deleteAccount() async throws {
         throw AuthError.unknown("この環境ではアカウントを削除できません。")
     }
@@ -132,37 +138,27 @@ final class MockAuthRepository: AuthRepository, @unchecked Sendable {
 
     func updateDisplayName(_ name: String) async throws {
         locked {
-            currentUser = UserProfile(
-                id: currentUser.id,
-                displayName: name,
-                registeredArea: currentUser.registeredArea,
-                email: currentUser.email,
-                role: currentUser.role
-            )
+            currentUser = currentUser.updating(displayName: name, nickname: name)
+        }
+    }
+
+    func updateProfileImage(_ image: UIImage) async throws {
+        locked {
+            let imageURL = "mock://profile/\(currentUser.id).jpg"
+            LocalProfileImageStore.shared.save(image, forURL: imageURL, uid: currentUser.id)
+            currentUser = currentUser.updating(profileImageURL: imageURL)
         }
     }
 
     func updateRegisteredArea(_ area: String) async throws {
         locked {
-            currentUser = UserProfile(
-                id: currentUser.id,
-                displayName: currentUser.displayName,
-                registeredArea: area,
-                email: currentUser.email,
-                role: currentUser.role
-            )
+            currentUser = currentUser.updatingRegisteredArea(area)
         }
     }
 
     func updateEmail(_ email: String) async throws {
         locked {
-            currentUser = UserProfile(
-                id: currentUser.id,
-                displayName: currentUser.displayName,
-                registeredArea: currentUser.registeredArea,
-                email: email,
-                role: currentUser.role
-            )
+            currentUser = currentUser.updating(email: email)
         }
     }
 
@@ -237,13 +233,27 @@ final class MockAuthRepository: AuthRepository, @unchecked Sendable {
                 registeredArea = legislator.address.displayMunicipality
             }
 
+            let profileImageURL: String?
+            if let profileImage = input.profileImage {
+                let imageURL = "mock://profile/\(currentUser.id).jpg"
+                LocalProfileImageStore.shared.save(
+                    profileImage,
+                    forURL: imageURL,
+                    uid: currentUser.id
+                )
+                profileImageURL = imageURL
+            } else {
+                profileImageURL = currentUser.profileImageURL
+            }
+
             currentUser = UserProfile(
                 id: currentUser.id,
                 displayName: displayName,
                 registeredArea: registeredArea,
                 email: currentUser.email,
                 role: input.role,
-                isProfileCompleted: true
+                isProfileCompleted: true,
+                profileImageURL: profileImageURL
             )
         }
     }

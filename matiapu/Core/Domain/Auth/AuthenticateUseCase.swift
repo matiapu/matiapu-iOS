@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct AuthenticateUseCase: Sendable {
     private let authRepository: any AuthRepository
@@ -79,6 +80,10 @@ struct ManageAccountUseCase: Sendable {
 
     func updateDisplayName(_ name: String) async throws {
         try await authRepository.updateDisplayName(name)
+    }
+
+    func updateProfileImage(_ image: UIImage) async throws {
+        try await authRepository.updateProfileImage(image)
     }
 
     func updateRegisteredArea(_ area: String) async throws {

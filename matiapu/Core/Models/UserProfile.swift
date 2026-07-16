@@ -66,11 +66,19 @@ struct UserProfile: Hashable, Codable {
         registeredArea: String? = nil,
         email: String? = nil,
         nickname: String? = nil,
-        address: UserAddress? = nil
+        address: UserAddress? = nil,
+        profileImageURL: String? = nil,
+        clearsProfileImageURL: Bool = false
     ) -> UserProfile {
         let resolvedDisplayName = displayName ?? self.displayName
         let resolvedNickname = nickname ?? self.nickname
         let resolvedRegisteredArea = registeredArea ?? self.registeredArea
+        let resolvedProfileImageURL: String?
+        if clearsProfileImageURL {
+            resolvedProfileImageURL = nil
+        } else {
+            resolvedProfileImageURL = profileImageURL ?? self.profileImageURL
+        }
         return UserProfile(
             id: id,
             displayName: resolvedDisplayName,
@@ -85,7 +93,7 @@ struct UserProfile: Hashable, Codable {
             nickname: resolvedNickname,
             birthDate: birthDate,
             address: address ?? self.address,
-            profileImageURL: profileImageURL
+            profileImageURL: resolvedProfileImageURL
         )
     }
 

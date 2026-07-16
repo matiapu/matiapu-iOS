@@ -147,6 +147,13 @@ enum FirestoreUserMapper {
         ]
     }
 
+    static func profileImageUpdate(_ profileImageURL: String) -> [String: Any] {
+        [
+            FirestoreFields.User.profileImage: ["url": profileImageURL],
+            FirestoreFields.User.updatedAt: FirestoreDateCodec.isoString(),
+        ]
+    }
+
     static func registeredAreaUpdate(_ area: String) -> [String: Any] {
         [
             "registered_area": area,

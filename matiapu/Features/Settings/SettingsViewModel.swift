@@ -5,6 +5,7 @@
 
 import Foundation
 import Observation
+import UIKit
 
 @Observable
 @MainActor
@@ -49,6 +50,11 @@ final class SettingsViewModel {
 
     func updateDisplayName(_ name: String) async throws {
         try await manageAccount.updateDisplayName(name)
+        syncProfileFromCache()
+    }
+
+    func updateProfileImage(_ image: UIImage) async throws {
+        try await manageAccount.updateProfileImage(image)
         syncProfileFromCache()
     }
 

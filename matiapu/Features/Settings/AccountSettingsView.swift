@@ -10,6 +10,11 @@ struct AccountSettingsView: View {
         SettingsScreenLayout {
             ScrollView {
                 VStack(spacing: AppSpacing.settingsCardSpacing) {
+                    NavigationLink(value: SettingsDestination.profileImageEdit) {
+                        SettingsMenuRow(title: "ユーザーアイコン変更")
+                    }
+                    .buttonStyle(.plain)
+
                     NavigationLink(value: SettingsDestination.usernameEdit) {
                         SettingsMenuRow(title: "ユーザー名変更")
                     }

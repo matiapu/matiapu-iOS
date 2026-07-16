@@ -68,12 +68,11 @@ struct SettingsView: View {
     private var profileCard: some View {
         SettingsCard {
             HStack(spacing: AppSpacing.settingsProfileCardSpacing) {
-                Circle()
-                    .fill(AppColors.settingsProfileAvatarPlaceholder)
-                    .frame(
-                        width: AppSize.settingsProfileCardAvatar,
-                        height: AppSize.settingsProfileCardAvatar
-                    )
+                ProfileAvatarView(
+                    imageURL: viewModel.profile?.profileImageURL,
+                    size: AppSize.settingsProfileCardAvatar,
+                    userID: viewModel.profile?.id
+                )
 
                 Text(viewModel.profile?.displayName ?? "ユーザー名ユーザー名")
                     .font(AppTypography.settingsCardTitle)
@@ -111,11 +110,5 @@ struct SettingsView: View {
             .padding(.vertical, AppSpacing.settingsMenuRowVertical)
             .frame(minHeight: AppSize.settingsMenuRowMinHeight)
         }
-    }
-}
-
-#Preview {
-    NavigationStack {
-        SettingsView(viewModel: .preview)
     }
 }

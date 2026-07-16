@@ -8,6 +8,7 @@ import Foundation
 enum SettingsDestination: Hashable {
     case accountSettings
     case usernameEdit
+    case profileImageEdit
     case emailPasswordEdit
     case regionSelection
     case municipalitySelection(prefectureName: String)

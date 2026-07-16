@@ -63,6 +63,8 @@ struct SettingsFlowView: View {
       AccountSettingsView()
     case .usernameEdit:
       UsernameEditView(viewModel: settingsViewModel, onSaved: resetNavigation)
+    case .profileImageEdit:
+      ProfileImageEditView(viewModel: settingsViewModel, onSaved: resetNavigation)
     case .emailPasswordEdit:
       EmailPasswordEditView(viewModel: settingsViewModel, onSaved: resetNavigation)
     case .regionSelection:
