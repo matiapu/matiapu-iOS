@@ -121,9 +121,3 @@ struct LikedPostsView: View {
     }
   }
 }
-
-#Preview {
-  NavigationStack {
-    LikedPostsView(viewModel: .preview, dependencies: .live)
-  }
-}

@@ -120,9 +120,3 @@ struct NotificationsView: View {
             .padding(.top, 2)
     }
 }
-
-#Preview {
-    NavigationStack {
-        NotificationsView(viewModel: .preview)
-    }
-}

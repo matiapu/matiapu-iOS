@@ -101,7 +101,3 @@ struct LoginView: View {
         }
     }
 }
-
-#Preview {
-    LoginView(viewModel: .preview, onSignUp: {}, onForgotPassword: {})
-}

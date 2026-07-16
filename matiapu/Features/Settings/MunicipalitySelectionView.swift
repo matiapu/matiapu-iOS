@@ -75,12 +75,3 @@ struct MunicipalitySelectionView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        MunicipalitySelectionView(
-            prefectureName: "東京都",
-            settingsViewModel: .preview
-        )
-    }
-}

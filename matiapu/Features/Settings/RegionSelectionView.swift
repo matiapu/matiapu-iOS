@@ -192,12 +192,3 @@ struct RegionSelectionView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        RegionSelectionView(
-            viewModel: .preview,
-            settingsViewModel: .preview
-        )
-    }
-}

@@ -134,9 +134,3 @@ struct EmailPasswordEditView: View {
     }
   }
 }
-
-#Preview {
-  NavigationStack {
-    EmailPasswordEditView(viewModel: .preview)
-  }
-}

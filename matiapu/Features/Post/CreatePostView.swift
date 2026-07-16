@@ -263,7 +263,3 @@ private struct CreatePostTagSection: View {
         .buttonStyle(.plain)
     }
 }
-
-#Preview {
-    CreatePostView(viewModel: .preview())
-}

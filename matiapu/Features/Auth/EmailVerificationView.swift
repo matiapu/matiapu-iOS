@@ -117,7 +117,3 @@ struct EmailVerificationView: View {
         }
     }
 }
-
-#Preview {
-    EmailVerificationView(viewModel: .preview, displayName: "山田 太郎")
-}

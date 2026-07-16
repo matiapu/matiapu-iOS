@@ -115,7 +115,3 @@ struct CitizenProfileRegistrationView: View {
         }
     }
 }
-
-#Preview {
-    CitizenProfileRegistrationView(viewModel: .preview, onBack: {})
-}

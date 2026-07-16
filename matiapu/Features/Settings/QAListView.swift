@@ -82,9 +82,3 @@ struct QAListView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        QAListView(viewModel: .preview)
-    }
-}

@@ -95,9 +95,3 @@ struct UsernameEditView: View {
     }
   }
 }
-
-#Preview {
-  NavigationStack {
-    UsernameEditView(viewModel: .preview)
-  }
-}

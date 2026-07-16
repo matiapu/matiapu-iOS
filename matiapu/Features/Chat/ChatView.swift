@@ -119,9 +119,3 @@ struct ChatView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        ChatView(viewModel: .preview)
-    }
-}

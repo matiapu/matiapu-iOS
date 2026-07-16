@@ -140,7 +140,3 @@ struct SignUpView: View {
         }
     }
 }
-
-#Preview {
-    SignUpView(viewModel: .preview, onLogin: {})
-}

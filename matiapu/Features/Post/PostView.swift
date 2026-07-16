@@ -80,7 +80,3 @@ struct PostView: View {
         )
     }
 }
-
-#Preview {
-    PostView(viewModel: .preview, chatViewModel: .preview)
-}

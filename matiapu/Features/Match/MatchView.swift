@@ -65,10 +65,3 @@ struct MatchView: View {
         )
     }
 }
-
-#Preview {
-    MatchView(
-        viewModel: .preview,
-        chatViewModel: .preview
-    )
-}

@@ -203,13 +203,3 @@ struct MapView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
-
-#Preview {
-    MapView(
-        viewModel: MapViewModel(
-            useCases: AppUseCases.make(from: .live),
-            authRepository: MockAuthRepository()
-        ),
-        postViewModel: .preview
-    )
-}

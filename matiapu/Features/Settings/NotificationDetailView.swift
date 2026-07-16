@@ -63,12 +63,3 @@ struct NotificationDetailView: View {
         }
     }
 }
-
-#Preview {
-    NavigationStack {
-        NotificationDetailView(
-            notificationId: "preview-1",
-            viewModel: .preview
-        )
-    }
-}
